@@ -1,12 +1,5 @@
 "use strict";
 //WEBKIT ONLY
-/* CSS CLASSES
-.activebtn
-.deactivebtn
-.fading1
-.fading2
-.fading3
-*/
 //IDEA: 週間ランキングとか
 function GetElm(id) { return document.getElementById(id); }
 function Onload() {
@@ -15,34 +8,18 @@ function Onload() {
 		ReflushSongList();
 	});
 	GetElm("speed").addEventListener("click", () => {
-		var tmp = Number.parseFloat(prompt("楽譜が落ちるスピードを指定できます(0.5~5.0倍)...").replace(/[^0-9\.]+/g,""));
+		var tmp = Number.parseFloat(prompt("楽譜が落ちるスピードを指定できます(0.5~5.0倍)...").replace(/[^0-9\.]+/g, ""));
 		if (!Number.isNaN(tmp)) {
 			GetElm("speed").innerText = "Speedx" + Math.min(5, Math.max(0.5, ((tmp * 10) << 0) / 10)).toFixed(1);
 			GetElm("speed").setAttribute("speed", "" + Math.min(5, Math.max(0.5, ((tmp * 10) << 0) / 10)));
-			VerifyMenu();
+			ReflushPreview();
 		}
 	});
 	GetElm("name").addEventListener("click", () => {
 		GetElm("name").innerText = prompt("name...");
 	});
 	Util.LoadScript("songs.js", () => {
-		var Tags = {};
-		SongList.forEach((v) => {
-			Tags[v.Level] = 1;
-		});
-		Object.keys(Tags).forEach((v) => {
-			var LI = document.createElement("li");
-			LI.innerText = v;
-			LI.addEventListener("click", () => {
-				if (LI.classList.contains("selbtn"))
-					LI.classList.remove("selbtn");
-				else
-					LI.classList.add("selbtn");
-				ReflushSongList();
-			});
-			GetElm("tags").appendChild(LI)
-		});
-		GetElm("tags-name").innerText = "Level";
+		ReflushTagList();
 		ReflushSongList();
 	});
 	setTimeout(() => {
@@ -67,19 +44,38 @@ function ShowMenu() {
 }
 var Selected_Next_Menu_Flag = true;
 function VerifyMenu() {
-	if (GetElm("speed").getAttribute("speed") != "_" && GetElm("song").getAttribute("song") != "_") {
+	if (GetElm("song").getAttribute("song") != "_") {
 		UI.ActiveBtn(GetElm("next"));
 		if (Selected_Next_Menu_Flag) {
 			UI.Blink(GetElm("next"));
 			Selected_Next_Menu_Flag = false;
-		}	
+		}
+		ReflushPreview();
 	} else {
 		UI.DeActiveBtn(GetElm("next"));
 	}
-	//ADD GAME UPDATE
 }
-var SongList = [{ Title: "", Folder: "", Level: 0 }];
-
+var SongList = [{ Title: "", Folder: "", Level: 0,Detail:"" }];
+function ReflushTagList() {
+	GetElm("tags").innerHTML = "";
+	var Tags = {};
+	SongList.forEach((v) => {
+		Tags[v.Level] = 1;
+	});
+	Object.keys(Tags).forEach((v) => {
+		var LI = document.createElement("li");
+		LI.innerText = v;
+		LI.addEventListener("click", () => {
+			if (LI.classList.contains("selbtn"))
+				LI.classList.remove("selbtn");
+			else
+				LI.classList.add("selbtn");
+			ReflushSongList();
+		});
+		GetElm("tags").appendChild(LI)
+	});
+	GetElm("tags-name").innerText = "Level";
+}
 function ReflushSongList() {
 	var Tags = GetElm("tags").children;
 	var ActiveTags = [];
@@ -90,18 +86,20 @@ function ReflushSongList() {
 	}
 	GetElm("songlist").innerHTML = "";
 	if (ActiveTags.length == 0)
-		SongList.forEach(AddSong);
+		SongList.forEach(AddToDOM);
 	else
-		SongList.filter((v) => ActiveTags.some(w => w == v.Level)).forEach(AddSong);
+		SongList.forEach((v, i) => {
+			if (ActiveTags.some(w => w == v.Level))
+				AddToDOM(v, i);
+		});
 
-	function AddSong(v) {
+	function AddToDOM(v,i) {
 		var LI = document.createElement("li");
 		LI.innerText = v.Title;
 		LI.addEventListener("click", () => {
 			GetElm("song").innerText = v.Title;
-			GetElm("song").setAttribute("song", v.Folder);
+			GetElm("song").setAttribute("song", i);
 			DetailReflushWithSong();
-			//ADD GAME UPDATE
 			VerifyMenu();
 			UI.Fadeout(GetElm("selectsong"), () => UI.Fadein(GetElm("detail")));
 		});
@@ -109,40 +107,48 @@ function ReflushSongList() {
 	}
 }
 function DetailReflushWithSong() {
-	GetElm("detailtext").innerText = "縦に7本レーンがありまして、左から順に、[S] [D] [F] [Space] [J] [K] [L] のキーを押して、落ちてくる譜面を叩いてください。";//TODO
+	GetElm("detailtext").innerText = "縦に7本レーンがありまして、左から順に、[S] [D] [F] [Space] [J] [K] [L] のキーを押して、落ちてくる譜面を叩いてください。\n\n曲へのコメント\n"+SongList[Number.parseInt(GetElm("song").getAttribute("song"))].Detail;//TODO
 }
 function ShowGame() {
 	UI.ChangeTitle(GetElm("song").innerText);
-	var Count = 0;
-	function CountingAndStart() {
-		Count++;
-		if (Count == 3) StartGame();
-	}
 	UI.Fadeout(GetElm("menu"), CountingAndStart);
 	UI.Fadein(GetElm("game"), CountingAndStart);
 	UI.Fadeout(GetElm("fin"), CountingAndStart);
 	UI.ActiveBtn(GetElm("prev"));
 	UI.DeActiveBtn(GetElm("next"));
-	GetElm("prev").addEventListener("click", function listener() {
-		GetElm("prev").removeEventListener("click", listener);
-		//GAME STOP
-		ShowMenu();
-	});
+	var Count = 0;
+	function CountingAndStart() {
+		Count++;
+		if (Count == 3) {
+			GetElm("prev").addEventListener("click", function listener() {
+				GetElm("prev").removeEventListener("click", listener);
+				//GAME STOP
+				ShowMenu();
+			});
+			StartGame();
+		}
+	}
 }
+
 function StartGame() {
-//
+	//TODO
 }
+function ReflushPreview() {
+	//GAME PREVIEW
+}
+
+
 function ShowFin() {
 	UI.ChangeTitle("Result");
 	UI.Fadeout(GetElm("menu"));
 	UI.Fadeout(GetElm("game"));
 	UI.Fadein(GetElm("fin"));
 	UI.ActiveBtn(GetElm("prev"));
+	UI.DeActiveBtn(GetElm("next"));
 	GetElm("prev").addEventListener("click", function listener() {
 		GetElm("prev").removeEventListener("click", listener);
 		ShowMenu();
 	});
-	UI.DeActiveBtn(GetElm("next"));
 }
 var UI = {
 	DOMs: {
