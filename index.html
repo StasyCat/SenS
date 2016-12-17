@@ -49,7 +49,11 @@
 		#prev,#song{text-align: left;}
 		#title{text-align: center;}
 		#next,#speed{text-align: right;}
-		#title,#song{text-overflow: ellipsis;}
+		#title,#song{
+			text-overflow: ellipsis;
+			white-space: nowrap;
+			overflow: hidden;
+		}
 		#speed{flex-basis: 3em;}
 		
 		#song,#speed{font-size: 6vmin;}

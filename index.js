@@ -11,8 +11,7 @@
 function GetElm(id) { return document.getElementById(id); }
 function Onload() {
 	GetElm("song").addEventListener("click", () => {
-		UI.Fadein(GetElm("selectsong"));
-		UI.Fadeout(GetElm("detail"));
+		UI.Fadeout(GetElm("detail"), () => UI.Fadein(GetElm("selectsong")));
 		//TODO
 	});
 	GetElm("speed").addEventListener("click", () => {
@@ -35,8 +34,7 @@ function ShowMenu() {
 	UI.Fadein(GetElm("menu"));
 	UI.Fadein(GetElm("game"));
 	UI.Fadeout(GetElm("fin"));
-	UI.Fadein(GetElm("detail"));
-	UI.Fadeout(GetElm("selectsong"));
+	UI.Fadeout(GetElm("selectsong"), () => GetElm("detail"));
 	UI.DeActiveBtn(GetElm("prev"));
 	UI.DeActiveBtn(GetElm("next"));
 	GetElm("next").addEventListener("click", function listener() {
