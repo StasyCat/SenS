@@ -97,13 +97,14 @@ function ReflushSongList() {
 			GetElm("song").setAttribute("song", v.Folder);
 			DetailReflushWithSong();
 			//ADD GAME UPDATE
+			VerifyMenu();
 			UI.Fadeout(GetElm("selectsong"), () => UI.Fadein(GetElm("detail")));
 		});
 		GetElm("songlist").appendChild(LI)
 	}
 }
 function DetailReflushWithSong() {
-	GetElm("detail").innerText = "えらんだよ～";
+	GetElm("detail").innerText = "えらんだよ～";//TODO
 }
 function ShowGame() {
 	UI.ChangeTitle(GetElm("song").innerText);

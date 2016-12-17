@@ -55,6 +55,7 @@
 			white-space: nowrap;
 			overflow: hidden;
 		}
+		#prev,#next{font-weight: bold;}
 		#speed{flex-basis: 3em;}
 		
 		#song,#speed{font-size: 1.5em;}
@@ -217,10 +218,11 @@
 				<div id="speed" speed="_">Speed...</div>
 			</div>
 			<div class="grow" id="menubody">
-				<div class="fullH fullW scrollY" id="detail">
-					<p>
-						曲を選んで、スピードを選んで
+				<div class="cV fullH fullW scrollY" id="detail">
+					<p class="grow scrollY">
+						上から丸が降ります。 タイミングをあわせ、[S] [D] [F] [Space] [J] [K] [L] のキーを押します。 得点が追加されます。 ハイスコアを狙います。
 					</p>
+					<p style="text-align: right;">作成者: 二人ほど。</p>
 				</div>
 				<div class="fullH fullW cV fading2" id="selectsong">
 					<div class="fullW" id="filter">
