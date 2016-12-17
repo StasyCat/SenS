@@ -47,15 +47,15 @@
 			margin-bottom: 0.5em;
 		}
 		#body>*{background-color: rgba(0,0,0,0.5)}
-		#prev,#song{text-align: left;}
-		#title{text-align: center;}
-		#next,#speed{text-align: right;}
+		#song{text-align: left;}
+		#title,#prev,#next{text-align: center;}
+		#speed{text-align: right;}
 		#title,#song{
 			text-overflow: ellipsis;
 			white-space: nowrap;
 			overflow: hidden;
 		}
-		#prev,#next{font-weight: bold;}
+		#prev,#next{font-weight: bold;min-width: 1em;border-radius: 2em;}
 		#speed{flex-basis: 3em;}
 		
 		#song,#speed{font-size: 1.5em;}
@@ -127,7 +127,14 @@
 				opacity: 0;
 			}
 		}
-
+		@keyframes blink {
+			from {background-color: transparent;}
+			30% {background-color: #EED;}
+			to {background-color: transparent;}
+		}
+		#next.activebtn,#prev.activebtn{
+			animation-direction: normal;
+		}
 		#song,#speed,#name,#songlist>*,.activebtn {
 			animation: active-btn 0.75s ease-in-out alternate infinite backwards;
 			cursor: pointer;
@@ -157,6 +164,9 @@
 		}
 		.fading3 {
 			animation: fading 0.2s ease-in-out reverse backwards;
+		}
+		.blink {
+			animation: blink 1.4s ease-in-out backwards;
 		}
 
 
@@ -209,22 +219,30 @@
 				</ul>
 			</div>
 		</div>
+		<div style="text-align: center;" class="fading2">
+			<div style="top: 50%;
+			font-size: 10vmin;
+			position: relative;
+			margin-top: -5vmin;" id="gameback">
+
+			</div>
+		</div>
 		<div class="fading2" id="game">
 			<canvas id="c1"></canvas>
 		</div>
 		<div class="cV fading2" id="menu">
 			<div class="cH" id="inputs">
 				<div class="grow" id="song" song="_">Song...</div>
-				<div id="speed" speed="_">Speed...</div>
+				<div id="speed" speed="1">Speedx1.0</div>
 			</div>
 			<div class="grow" id="menubody">
-				<div class="cV fullH fullW scrollY" id="detail">
-					<p class="grow scrollY">
-						上から丸が降ります。 タイミングをあわせ、[S] [D] [F] [Space] [J] [K] [L] のキーを押します。 得点が追加されます。 ハイスコアを狙います。
+				<div class="cV fullH fullW scrollY fading2" id="detail">
+					<p class="grow scrollY" id="detailtext">
+						縦に7本レーンがありまして、左から順に、[S] [D] [F] [Space] [J] [K] [L] のキーを押して、落ちてくる譜面を叩いてください。
 					</p>
 					<p style="text-align: right;">作成者: 二人ほど。</p>
 				</div>
-				<div class="fullH fullW cV fading2" id="selectsong">
+				<div class="fullH fullW cV" id="selectsong">
 					<div class="fullW" id="filter">
 						<span id="tags-name">Loading...</span>
 						<div class="scrollX mL">

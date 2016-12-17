@@ -15,9 +15,9 @@ function Onload() {
 		ReflushSongList();
 	});
 	GetElm("speed").addEventListener("click", () => {
-		var tmp = Number.parseFloat(prompt("Speed(0.5~5.0)..."));
+		var tmp = Number.parseFloat(prompt("楽譜が落ちるスピードを指定できます(0.5~5.0倍)...").replace(/[^0-9\.]+/g,""));
 		if (!Number.isNaN(tmp)) {
-			GetElm("speed").innerText = "x" + Math.min(5, Math.max(0.5, ((tmp * 10) << 0) / 10)).toFixed(1);
+			GetElm("speed").innerText = "Speedx" + Math.min(5, Math.max(0.5, ((tmp * 10) << 0) / 10)).toFixed(1);
 			GetElm("speed").setAttribute("speed", "" + Math.min(5, Math.max(0.5, ((tmp * 10) << 0) / 10)));
 			VerifyMenu();
 		}
@@ -54,7 +54,7 @@ function ShowMenu() {
 	UI.Fadein(GetElm("menu"));
 	UI.Fadein(GetElm("game"));
 	UI.Fadeout(GetElm("fin"));
-	UI.Fadeout(GetElm("selectsong"), () => GetElm("detail"));
+	UI.Fadein(GetElm("selectsong"), () => UI.Fadeout(GetElm("detail")));
 	UI.DeActiveBtn(GetElm("prev"));
 	UI.DeActiveBtn(GetElm("next"));
 	GetElm("next").addEventListener("click", function listener() {
@@ -65,9 +65,14 @@ function ShowMenu() {
 	});
 	VerifyMenu();
 }
+var Selected_Next_Menu_Flag = true;
 function VerifyMenu() {
 	if (GetElm("speed").getAttribute("speed") != "_" && GetElm("song").getAttribute("song") != "_") {
 		UI.ActiveBtn(GetElm("next"));
+		if (Selected_Next_Menu_Flag) {
+			UI.Blink(GetElm("next"));
+			Selected_Next_Menu_Flag = false;
+		}	
 	} else {
 		UI.DeActiveBtn(GetElm("next"));
 	}
@@ -88,7 +93,7 @@ function ReflushSongList() {
 		SongList.forEach(AddSong);
 	else
 		SongList.filter((v) => ActiveTags.some(w => w == v.Level)).forEach(AddSong);
-	
+
 	function AddSong(v) {
 		var LI = document.createElement("li");
 		LI.innerText = v.Title;
@@ -104,7 +109,7 @@ function ReflushSongList() {
 	}
 }
 function DetailReflushWithSong() {
-	GetElm("detail").innerText = "えらんだよ～";//TODO
+	GetElm("detailtext").innerText = "縦に7本レーンがありまして、左から順に、[S] [D] [F] [Space] [J] [K] [L] のキーを押して、落ちてくる譜面を叩いてください。";//TODO
 }
 function ShowGame() {
 	UI.ChangeTitle(GetElm("song").innerText);
@@ -125,7 +130,7 @@ function ShowGame() {
 	});
 }
 function StartGame() {
-
+//
 }
 function ShowFin() {
 	UI.ChangeTitle("Result");
@@ -190,6 +195,17 @@ var UI = {
 	}, DeActiveBtn: (DOM) => {
 		DOM.classList.remove("activebtn");
 		DOM.classList.add("deactivebtn");
+	}, Blink: (DOM, Fn) => {
+		Fn = Fn || (() => 0);
+		if (!DOM.classList.contains("blink")) {
+			DOM.addEventListener("webkitAnimationEnd", function listener() {
+				DOM.classList.remove("blink");
+				DOM.removeEventListener("webkitAnimationEnd", listener);
+				Fn();
+			});
+			DOM.classList.add("blink");
+		}
+		Fn();
 	}
 };
 var Util = {
