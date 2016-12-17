@@ -20,7 +20,6 @@
 		}
 		#head,.head{
 			font-family: Raleway, 'Noto Sans Japanese', Roboto, "Yu Gothic", "Meiryo UI", sans-serif;
-			font-size: 2em;
 		}
 
 		html,body,.fullH,#body>*{height: 100%;}
@@ -40,18 +39,21 @@
 			margin-bottom: 0.2em;
 		}
 		#head{
-			font-size: 2em;
+			font-size: 10vmin;
 			vertical-align: middle;
 			box-shadow: 0 -1em 1em 1em #FFF;
+			padding: 0.2em 0;
 			margin-bottom: 0.5em;
 		}
 		#body>*{background-color: rgba(0,0,0,0.5)}
 		#prev,#song{text-align: left;}
 		#title{text-align: center;}
 		#next,#speed{text-align: right;}
-		#song{text-overflow: ellipsis;}
+		#title,#song{text-overflow: ellipsis;}
 		#speed{flex-basis: 3em;}
 		
+		#song,#speed{font-size: 6vmin;}
+
 		#inputs{margin-bottom: 1em;}
 		#filter{margin-bottom: 0.5em;}
 		#tags{
@@ -82,7 +84,15 @@
 				color:#FFD;
 			}
 			to {
-				color:#DD9;
+				color:#BB4;
+			}
+		}
+		@keyframes deactive-btn {
+			from {
+				color:#666;
+			}
+			to {
+				color:#666;
 			}
 		}
 		@keyframes fading {
@@ -97,16 +107,19 @@
 		#song,#speed,#name,#songlist>*,#tags>*,.activebtn {
 			animation: active-btn 0.7s ease-in-out alternate infinite backwards;
 			cursor: pointer;
+			user-select: none;
 		}
 		.deactivebtn {
-			color: #555;
-			animation: active-btn 1s ease-in-out alternate infinite backwards;
+			animation: deactive-btn 1s ease-in-out alternate infinite backwards;
+			cursor: default;
+			user-select: none;
 		}
 		.fading1 {
 			animation: fading 0.4s ease-in-out normal forwards;
 		}
 		.fading2 {
 			opacity: 0;
+			visibility: hidden;
 		}
 		.fading3 {
 			animation: fading 0.2s ease-in-out reverse backwards;
@@ -142,9 +155,9 @@
 <body onload="document.getElementById('gwebfont1').rel='stylesheet';document.getElementById('gwebfont2').rel='stylesheet';">
 <div class="fullH fullW cV">
 	<div class="fullW cH" id="head">
-		<span class="fullH" id="prev">&lt;</span>
+		<span class="fullH deactivebtn" id="prev">&lt;</span>
 		<span class="fullH grow" id="title">SenS!</span>
-		<span class="fullH" id="next">&gt;</span>
+		<span class="fullH deactivebtn" id="next">&gt;</span>
 	</div>
 	<div class="cV grow mBoth" id="body">
 		<div class="cV fading2" id="fin">
@@ -167,12 +180,12 @@
 		</div>
 		<div class="cV fading2" id="menu">
 			<div class="cH" id="inputs">
-				<div class="grow" id="song">Song...</div>
-				<div id="speed">Speed...</div>
+				<div class="grow" id="song" song="_">Song...</div>
+				<div id="speed" speed="_">Speed...</div>
 			</div>
 			<div class="grow" id="menubody">
 				<div class="fullH fullW scrollY" id="detail">Details</div>
-				<div class="fullH fullW cV" id="selectsong">
+				<div class="fullH fullW cV fading2" id="selectsong">
 					<div class="fullW" id="filter">
 						<span id="tags-name">Difficulty</span>
 						<div class="scrollX mL">

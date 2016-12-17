@@ -10,18 +10,50 @@
 //IDEA: 週間ランキングとか
 function GetElm(id) { return document.getElementById(id); }
 function Onload() {
-	GetElm("song").addEventListener("click", () => console.log("soong"));
-	GetElm("speed").addEventListener("click",() => console.log("speed"));
-	GetElm("name").addEventListener("click", () => console.log("name"));
-	ShowMenu();
+	GetElm("song").addEventListener("click", () => {
+		UI.Fadein(GetElm("selectsong"));
+		UI.Fadeout(GetElm("detail"));
+		//TODO
+	});
+	GetElm("speed").addEventListener("click", () => {
+		var tmp = Number.parseFloat(prompt("Speed(0.5~5.0)..."));
+		if (!Number.isNaN(tmp)) {
+			GetElm("speed").innerText = "x" + Math.min(5, Math.max(0.5, ((tmp * 10) << 0) / 10)).toFixed(1);
+			GetElm("speed").setAttribute("speed", "" + Math.min(5, Math.max(0.5, ((tmp * 10) << 0) / 10)));
+			VerifyMenu();
+		}
+	});
+	GetElm("name").addEventListener("click", () => {
+		GetElm("name").innerText = prompt("name...");
+	});
+	setTimeout(() => {
+		ShowMenu();
+	}, 500);
 }
 function ShowMenu() {
-	setTimeout(() => {
-		UI.ChangeTitle("Song/Speed", () => UI.Fadeout(GetElm("fin")));
-		UI.Fadein(GetElm("menu"));
-		UI.Fadein(GetElm("game"));
-		UI.Fadeout(GetElm("fin"));
-	}, 500);
+	UI.ChangeTitle("Song/Speed", () => UI.Fadeout(GetElm("fin")));
+	UI.Fadein(GetElm("menu"));
+	UI.Fadein(GetElm("game"));
+	UI.Fadeout(GetElm("fin"));
+	UI.Fadein(GetElm("detail"));
+	UI.Fadeout(GetElm("selectsong"));
+	UI.DeActiveBtn(GetElm("prev"));
+	UI.DeActiveBtn(GetElm("next"));
+	GetElm("next").addEventListener("click", function listener() {
+		if (GetElm("next").classList.contains("activebtn")) {
+			GetElm("next").removeEventListener("click", listener);
+			ShowGame();
+		}
+	});
+	VerifyMenu();
+}
+function VerifyMenu() {
+	if (GetElm("speed").getAttribute("speed") != "_" && GetElm("song").getAttribute("song") != "_") {
+		UI.ActiveBtn(GetElm("next"));
+	} else {
+		UI.DeActiveBtn(GetElm("next"));
+	}
+	//ADD GAME UPDATE
 }
 function ShowGame() {
 	UI.ChangeTitle(GetElm("song").innerText);
@@ -33,6 +65,13 @@ function ShowGame() {
 	UI.Fadeout(GetElm("menu"), CountingAndStart);
 	UI.Fadein(GetElm("game"), CountingAndStart);
 	UI.Fadeout(GetElm("fin"), CountingAndStart);
+	UI.ActiveBtn(GetElm("prev"));
+	UI.DeActiveBtn(GetElm("next"));
+	GetElm("prev").addEventListener("click", function listener() {
+		GetElm("prev").removeEventListener("click", listener);
+		//GAME STOP
+		ShowMenu();
+	});
 }
 function StartGame() {
 
@@ -42,6 +81,12 @@ function ShowFin() {
 	UI.Fadeout(GetElm("menu"));
 	UI.Fadeout(GetElm("game"));
 	UI.Fadein(GetElm("fin"));
+	UI.ActiveBtn(GetElm("prev"));
+	GetElm("prev").addEventListener("click", function listener() {
+		GetElm("prev").removeEventListener("click", listener);
+		ShowMenu();
+	});
+	UI.DeActiveBtn(GetElm("next"));
 }
 var UI = {
 	DOMs: {
@@ -88,7 +133,13 @@ var UI = {
 			DOM.classList.remove("fading2");
 			DOM.classList.add("fading3");
 		} else Fn();
-	},
+	}, ActiveBtn: (DOM) => {
+		DOM.classList.remove("deactivebtn");
+		DOM.classList.add("activebtn");
+	}, DeActiveBtn: (DOM) => {
+		DOM.classList.remove("activebtn");
+		DOM.classList.add("deactivebtn");
+	}
 };
 
 window.addEventListener("load", () => {
