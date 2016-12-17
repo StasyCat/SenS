@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>SenS!</title>
+	<meta charset="UTF-8">
+	<meta name="description" content="いわゆる音ゲーです">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="author" content="Masaya Kai">
+	<link href="http://fonts.googleapis.com/earlyaccess/notosansjapanese.css" id="gwebfont1" />
+	<link href="http://fonts.googleapis.com/css?family=Open+Sans|Open+Sans+Condensed:300|Quicksand:300|Raleway:200" id="gwebfont2"
+	/>
+	<style>
+		*{margin: 0;padding:0;}
+		body{
+			background: #000;
+			color:#CCC;
+			font-family: "Open Sans", 'Noto Sans Japanese', Roboto, "Yu Gothic", "Meiryo UI", sans-serif;
+			overflow: hidden;
+		}
+		#head,.head{
+			font-family: Raleway, 'Noto Sans Japanese', Roboto, "Yu Gothic", "Meiryo UI", sans-serif;
+			font-size: 2em;
+		}
+
+		html,body,.fullH,#body>*{height: 100%;}
+		html,body,.fullW,#body>*{width: 100%;}
+		#body>*,#menubody>*{position: absolute;}
+		#body,#menubody{position: relative;}
+		.cV,.cH{display: flex;}
+		.cV{flex-direction: column;}
+		.cH{flex-direction: row;}
+		.scrollY{overflow-y: auto;}
+		.scrollX{overflow-x: auto;}
+		.mL{margin-left: 1em;}
+		.mBoth{margin-left: 1em;margin-right: 1em;}
+		.grow{flex-grow: 1;}
+		.listV>*{
+			display: block;
+			margin-bottom: 0.2em;
+		}
+		#head{
+			font-size: 2em;
+			vertical-align: middle;
+			box-shadow: 0 -1em 1em 1em #FFF;
+			margin-bottom: 0.5em;
+		}
+		#body>*{background-color: rgba(0,0,0,0.5)}
+		#prev,#song{text-align: left;}
+		#title{text-align: center;}
+		#next,#speed{text-align: right;}
+		#song{text-overflow: ellipsis;}
+		#speed{flex-basis: 3em;}
+		
+		#inputs{margin-bottom: 1em;}
+		#filter{margin-bottom: 0.5em;}
+		#tags{
+			display: inline;
+			overflow-x: scroll;
+			border-collapse: separate; 
+  	  border-spacing: 0.5em 0; 
+		}
+		#tags>*{
+			display: table-cell;
+			margin-right: 0.5em;
+			padding:0 0.5;
+		}
+		.rank{
+			flex-basis: 3em;
+			flex-shrink: 1;
+		}
+		.score{
+			flex-basis: 5em;
+			flex-shrink: 1;
+		}
+		.name{
+			flex-grow: 1;
+		}
+
+		@keyframes active-btn {
+			from {
+				color:#FFD;
+			}
+			to {
+				color:#DD9;
+			}
+		}
+		@keyframes fading {
+			from {
+				opacity: 1;
+			}
+			to {
+				opacity: 0;
+			}
+		}
+
+		#song,#speed,#name,#songlist>*,#tags>*,.activebtn {
+			animation: active-btn 0.7s ease-in-out alternate infinite backwards;
+			cursor: pointer;
+		}
+		.deactivebtn {
+			color: #555;
+			animation: active-btn 1s ease-in-out alternate infinite backwards;
+		}
+		.fading1 {
+			animation: fading 0.4s ease-in-out normal forwards;
+		}
+		.fading2 {
+			opacity: 0;
+		}
+		.fading3 {
+			animation: fading 0.2s ease-in-out reverse backwards;
+		}
+
+
+		::-webkit-scrollbar {
+			overflow: hidden;
+			width: 0.2cm;
+			background: #444;
+			border-radius: 0.2em;
+		}
+		::-webkit-scrollbar:horizontal {
+			height: 0.2cm;
+		}
+		::-webkit-scrollbar-button {
+			display: none;
+		}
+		::-webkit-scrollbar-thumb {
+			overflow: hidden;
+			border-radius: 0.2em;
+			background: #BBB;
+		}
+		::-webkit-scrollbar-corner {
+			overflow: hidden;
+			border-radius: 0.2em;
+			background: transparent;
+		}
+	</style>
+<script src="index.js"></script>
+</head>
+
+<body onload="document.getElementById('gwebfont1').rel='stylesheet';document.getElementById('gwebfont2').rel='stylesheet';">
+<div class="fullH fullW cV">
+	<div class="fullW cH" id="head">
+		<span class="fullH" id="prev">&lt;</span>
+		<span class="fullH grow" id="title">SenS!</span>
+		<span class="fullH" id="next">&gt;</span>
+	</div>
+	<div class="cV grow mBoth" id="body">
+		<div class="cV fading2" id="fin">
+			<div id="detail-fin">
+				<span id="fin-text">Fin!</span>
+			</div>
+			<div id="name">Name...</div>
+			<div class="grow scrollY" id="ranking">
+				<ul class="listV" id="rankinglist">
+					<li>
+						<span class="rank">#1</span>
+						<span class="score">15762pt</span>
+						<span class="name">Msy</span>
+					</li>
+				</ul>
+			</div>
+		</div>
+		<div class="fading2" id="game">
+			<canvas id="c1"></canvas>
+		</div>
+		<div class="cV fading2" id="menu">
+			<div class="cH" id="inputs">
+				<div class="grow" id="song">Song...</div>
+				<div id="speed">Speed...</div>
+			</div>
+			<div class="grow" id="menubody">
+				<div class="fullH fullW scrollY" id="detail">Details</div>
+				<div class="fullH fullW cV" id="selectsong">
+					<div class="fullW" id="filter">
+						<span id="tags-name">Difficulty</span>
+						<div class="scrollX mL">
+							<ul class="cW fullW grow" id="tags">
+								<li>123</li>
+							</ul>
+						</div>
+					</div>
+					<div class="fullW grow scrollY" id="songs">
+						<ul class="fullW fullH listV" id="songlist">
+							<li> 123</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+</body>
+
+</html>
