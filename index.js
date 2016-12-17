@@ -12,7 +12,7 @@ function GetElm(id) { return document.getElementById(id); }
 function Onload() {
 	GetElm("song").addEventListener("click", () => {
 		UI.Fadeout(GetElm("detail"), () => UI.Fadein(GetElm("selectsong")));
-		//TODO
+		ReflushSongList();
 	});
 	GetElm("speed").addEventListener("click", () => {
 		var tmp = Number.parseFloat(prompt("Speed(0.5~5.0)..."));
@@ -24,6 +24,26 @@ function Onload() {
 	});
 	GetElm("name").addEventListener("click", () => {
 		GetElm("name").innerText = prompt("name...");
+	});
+	Util.LoadScript("songs.js", () => {
+		var Tags = {};
+		SongList.forEach((v) => {
+			Tags[v.Level] = 1;
+		});
+		Object.keys(Tags).forEach((v) => {
+			var LI = document.createElement("li");
+			LI.innerText = v;
+			LI.addEventListener("click", () => {
+				if (LI.classList.contains("selbtn"))
+					LI.classList.remove("selbtn");
+				else
+					LI.classList.add("selbtn");
+				ReflushSongList();
+			});
+			GetElm("tags").appendChild(LI)
+		});
+		GetElm("tags-name").innerText = "Level";
+		ReflushSongList();
 	});
 	setTimeout(() => {
 		ShowMenu();
@@ -52,6 +72,38 @@ function VerifyMenu() {
 		UI.DeActiveBtn(GetElm("next"));
 	}
 	//ADD GAME UPDATE
+}
+var SongList = [{ Title: "", Folder: "", Level: 0 }];
+
+function ReflushSongList() {
+	var Tags = GetElm("tags").children;
+	var ActiveTags = [];
+	for (var i = 0; i < Tags.length; i++) {
+		var elm = Tags.item(i);
+		if (elm.classList.contains("selbtn"))
+			ActiveTags.push(elm.innerText);
+	}
+	GetElm("songlist").innerHTML = "";
+	if (ActiveTags.length == 0)
+		SongList.forEach(AddSong);
+	else
+		SongList.filter((v) => ActiveTags.some(w => w == v.Level)).forEach(AddSong);
+	
+	function AddSong(v) {
+		var LI = document.createElement("li");
+		LI.innerText = v.Title;
+		LI.addEventListener("click", () => {
+			GetElm("song").innerText = v.Title;
+			GetElm("song").setAttribute("song", v.Folder);
+			DetailReflushWithSong();
+			//ADD GAME UPDATE
+			UI.Fadeout(GetElm("selectsong"), () => UI.Fadein(GetElm("detail")));
+		});
+		GetElm("songlist").appendChild(LI)
+	}
+}
+function DetailReflushWithSong() {
+	GetElm("detail").innerText = "えらんだよ～";
 }
 function ShowGame() {
 	UI.ChangeTitle(GetElm("song").innerText);
@@ -139,7 +191,44 @@ var UI = {
 		DOM.classList.add("deactivebtn");
 	}
 };
+var Util = {
+	LoadScript: (src, callback) => {
+		let done = false;
+		let head = document.getElementsByTagName('head')[0];
+		let script = document.createElement('script');
+		script.src = src;
+		head.appendChild(script);
+		script.onload = script.onreadystatechange = function () {
+			if (!done && (!script.readyState || script.readyState === "loaded" || script.readyState === "complete")) {
+				done = true;
+				callback();
+				script.onload = script.onreadystatechange = null;
+				if (head && script.parentNode) {
+					head.removeChild(script);
+				}
+			}
+		};
+	}
+	, URLtoObject: () => {
+		let arg = {};
+		let pair = location.search.substring(1).split('&');
+		pair.forEach(function (V) {
+			let kv = V.split('=');
+			arg[kv[0]] = kv[1];
+		});
+		return arg;
+	}, Polyfill: () => {
+		window.performance = window.performance || {};
+		window.performance.now = window.performance.now || function () { return new Date().getTime(); };
 
+		var timer = null;
+		window.requestAnimationFrame = window.requestAnimationFrame || function (callback) {
+			clearTimeout(timer);
+			setTimeout(callback, 1000 / 60);
+		};
+	}
+}
+Util.Polyfill();
 window.addEventListener("load", () => {
 	UI.Onload();
 	Onload();

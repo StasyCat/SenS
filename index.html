@@ -39,9 +39,9 @@
 			margin-bottom: 0.2em;
 		}
 		#head{
-			font-size: 10vmin;
+			font-size: 5vh;
 			vertical-align: middle;
-			box-shadow: 0 -1em 1em 1em #FFF;
+			box-shadow: 0 -10px 15px 11px #FFF;
 			padding: 0.2em 0;
 			margin-bottom: 0.5em;
 		}
@@ -56,7 +56,8 @@
 		}
 		#speed{flex-basis: 3em;}
 		
-		#song,#speed{font-size: 6vmin;}
+		#song,#speed{font-size: 1.5em;}
+		#name,#songlist>*,#tags>*{font-size:1.5em;}
 
 		#inputs{margin-bottom: 1em;}
 		#filter{margin-bottom: 0.5em;}
@@ -69,7 +70,6 @@
 		#tags>*{
 			display: table-cell;
 			margin-right: 0.5em;
-			padding:0 0.5;
 		}
 		.rank{
 			flex-basis: 3em;
@@ -99,6 +99,24 @@
 				color:#666;
 			}
 		}
+		@keyframes unselected-btn {
+			from {
+				color:#990;
+			}
+			to {
+				color:#770;
+			}
+		}
+		@keyframes selected-btn {
+			from {
+				color:#FFD;
+				text-shadow: 0 0 7px #FC0;
+			}
+			to {
+				color:#BB4;
+				text-shadow: 0 0 5px #FFF;
+			}
+		}
 		@keyframes fading {
 			from {
 				opacity: 1;
@@ -108,18 +126,28 @@
 			}
 		}
 
-		#song,#speed,#name,#songlist>*,#tags>*,.activebtn {
-			animation: active-btn 0.7s ease-in-out alternate infinite backwards;
+		#song,#speed,#name,#songlist>*,.activebtn {
+			animation: active-btn 0.75s ease-in-out alternate infinite backwards;
 			cursor: pointer;
 			user-select: none;
 		}
-		.deactivebtn {
+		.deactivebtn,.selbtn {
 			animation: deactive-btn 1s ease-in-out alternate infinite backwards;
 			cursor: default;
 			user-select: none;
 		}
+		.selbtn{
+			animation: selected-btn 0.75s ease-in-out alternate infinite backwards !important;
+			cursor: default;
+			user-select: none;
+		}
+		.unselbtn,#tags>* {
+			animation: unselected-btn 1s ease-in-out alternate infinite backwards;
+			cursor: default;
+			user-select: none;
+		}
 		.fading1 {
-			animation: fading 0.4s ease-in-out normal forwards;
+			animation: fading 0.75s ease-in-out normal forwards;
 		}
 		.fading2 {
 			opacity: 0;
@@ -188,19 +216,21 @@
 				<div id="speed" speed="_">Speed...</div>
 			</div>
 			<div class="grow" id="menubody">
-				<div class="fullH fullW scrollY" id="detail">Details</div>
+				<div class="fullH fullW scrollY" id="detail">
+					<p>
+						曲を選んで、スピードを選んで
+					</p>
+				</div>
 				<div class="fullH fullW cV fading2" id="selectsong">
 					<div class="fullW" id="filter">
-						<span id="tags-name">Difficulty</span>
+						<span id="tags-name">Loading...</span>
 						<div class="scrollX mL">
 							<ul class="cW fullW grow" id="tags">
-								<li>123</li>
 							</ul>
 						</div>
 					</div>
 					<div class="fullW grow scrollY" id="songs">
 						<ul class="fullW fullH listV" id="songlist">
-							<li> 123</li>
 						</ul>
 					</div>
 				</div>
