@@ -269,6 +269,7 @@ var Game = {
 					Game.Lines[tmp[0]].Nodes.push({ Time: tmp.slice(1), _: { Pressed: false } });
 				}
 			});
+			NodeText = "";
 			Game.Lines.forEach((line) => { line.Nodes = line.Nodes.sort((a, b) => a.Time[0] - b.Time[0]); });
 			Game.Audio.onended = () => {
 				console.log("Fin");
@@ -414,9 +415,16 @@ var Game = {
 					if (This.ID >= 0 && !isUp) Game.Lines[i].Nodes.splice(This.ID, 1);
 				} else {
 					if (This.ID >= 0 && Math.abs(This.Timespan) < Game._.LimitGOSA) {
+						switch (Game.Lines[i].Nodes[This.ID].Time.length) {
+							case 1:
+								if (isUp) return;
+							case 2:	
+								//TODO Longnode	
+						}
+							
 						Game.Lines[i].Color = Math.sign(This.Timespan) * (Math.max(Math.abs(This.Timespan), Game._.MaxScoreLimitGOSA) - Game._.MaxScoreLimitGOSA) / (Game._.LimitGOSA - Game._.MaxScoreLimitGOSA);
 						Game.Lines[i].Light = 1;
-						Game.Lines[i].Nodes[This.ID]._.Pressed = true;//TODO LongNode
+						Game.Lines[i].Nodes[This.ID]._.Pressed = true;
 						Game.Combo = Math.min(Game.Combo + 1, 5);
 						Game.Score += (Game.Combo / Math.pow((
 							Math.max(Math.abs(This.Timespan), Game._.MaxScoreLimitGOSA) - Game._.MaxScoreLimitGOSA) / (Game._.LimitGOSA - Game._.MaxScoreLimitGOSA) //0:Good ~ 1:Bad
@@ -438,17 +446,26 @@ var Game = {
 		Game.Audio = new Audio();
 		//Game.Audio.loop = true;
 		Game.Draw = new Drawing(GetElm("c1"), GetElm("game"));
+
+		Game_Keyboard_.Pressed = [];		
+		Game._.Keys.forEach((v) => Game_Keyboard_.Pressed[v] = false);
 		document.onkeydown = (e) => {
 			if (!e) e = window.event;
+			if (Game_Keyboard_[e.keyCode]) return;
+			Game_Keyboard_[e.keyCode] = true;
 			Game.OnKey(false, e.keyCode, { Shift: e.shiftKey, Ctrl: e.ctrlKey });
 		}
 		document.onkeyup = (e) => {
 			if (!e) e = window.event;
+			if (!Game_Keyboard_[e.keyCode]) return;
+			Game_Keyboard_[e.keyCode] = false;
 			Game.OnKey(true, e.keyCode, { Shift: e.shiftKey, Ctrl: e.ctrlKey });
 		}
 	}//Document.onload
 }
-
+var Game_Keyboard_={
+	Pressed: {}
+};
 var UI = {
 	DOMs: {
 		Title: undefined
