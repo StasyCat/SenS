@@ -1,4 +1,5 @@
-Game.NodeText = "0:32 0:2:8921 982920";
+Game.NodeText = "0:32 0:2:1302 2:1320 92000";
+Game.MusicFile = "夜咄ディセイブ.mp3";
 /*
 Arg.len
 1	FinishTime
