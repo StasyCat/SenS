@@ -8,15 +8,15 @@ function Onload() {
 		ReflushSongList();
 	});
 	GetElm("speed").addEventListener("click", () => {
-		var tmp = Number.parseFloat(prompt("楽譜が落ちるスピードを指定できます(0.5~5.0倍)...").replace(/[^0-9\.]+/g, ""));
+		var tmp = Number.parseFloat((prompt("楽譜が落ちるスピードを指定できます(0.5~5.0倍)...") || "").replace(/[^0-9\.]+/g, ""));
 		if (!Number.isNaN(tmp)) {
 			GetElm("speed").innerText = "Speedx" + Math.min(5, Math.max(0.5, ((tmp * 10) << 0) / 10)).toFixed(1);
 			GetElm("speed").setAttribute("speed", "" + Math.min(5, Math.max(0.5, ((tmp * 10) << 0) / 10)));
-			ReflushPreview();
+			VerifyMenu();
 		}
 	});
 	GetElm("name").addEventListener("click", () => {
-		GetElm("name").innerText = prompt("name...");
+		GetElm("name").innerText = prompt("name...") || "";
 	});
 	Util.LoadScript("songs.js", () => {
 		ReflushTagList();
@@ -55,7 +55,7 @@ function VerifyMenu() {
 		UI.DeActiveBtn(GetElm("next"));
 	}
 }
-var SongList = [{ Title: "", Folder: "", Level: 0,Detail:"" }];
+var SongList = [{ Title: "", Folder: "", Level: 0, Detail: "" }];
 function ReflushTagList() {
 	GetElm("tags").innerHTML = "";
 	var Tags = {};
@@ -93,7 +93,7 @@ function ReflushSongList() {
 				AddToDOM(v, i);
 		});
 
-	function AddToDOM(v,i) {
+	function AddToDOM(v, i) {
 		var LI = document.createElement("li");
 		LI.innerText = v.Title;
 		LI.addEventListener("click", () => {
@@ -107,34 +107,38 @@ function ReflushSongList() {
 	}
 }
 function DetailReflushWithSong() {
-	GetElm("detailtext").innerText = "縦に7本レーンがありまして、左から順に、[S] [D] [F] [Space] [J] [K] [L] のキーを押して、落ちてくる譜面を叩いてください。\n\n曲へのコメント\n"+SongList[Number.parseInt(GetElm("song").getAttribute("song"))].Detail;//TODO
+	GetElm("detailtext").innerText = "縦に7本レーンがありまして、左から順に、[S] [D] [F] [Space] [J] [K] [L] のキーを押して、落ちてくる譜面を叩いてください。\n\n曲へのコメント\n" + SongList[Number.parseInt(GetElm("song").getAttribute("song"))].Detail;
 }
 function ShowGame() {
+	var Count = 0;
 	UI.ChangeTitle(GetElm("song").innerText);
 	UI.Fadeout(GetElm("menu"), CountingAndStart);
 	UI.Fadein(GetElm("game"), CountingAndStart);
 	UI.Fadeout(GetElm("fin"), CountingAndStart);
 	UI.ActiveBtn(GetElm("prev"));
 	UI.DeActiveBtn(GetElm("next"));
-	var Count = 0;
 	function CountingAndStart() {
 		Count++;
+		console.log(Count);
 		if (Count == 3) {
+			StartGame();
 			GetElm("prev").addEventListener("click", function listener() {
 				GetElm("prev").removeEventListener("click", listener);
-				//GAME STOP
+				Game.FinishTime = 0;
 				ShowMenu();
 			});
-			StartGame();
 		}
 	}
 }
 
 function StartGame() {
-	//TODO
+	Game.AutoMode = false;
+	Game.Init();
 }
 function ReflushPreview() {
-	//GAME PREVIEW
+	Game.AutoMode = true;
+	Game.Speed = 5000 / Number.parseFloat(GetElm("speed").getAttribute("speed"));//Speed Linked
+	Game.Init();
 }
 
 
@@ -150,6 +154,290 @@ function ShowFin() {
 		ShowMenu();
 	});
 }
+
+class Drawing {
+	constructor(canvas, parent) {
+		this.Parent = parent;
+		if (canvas.getContext) this.ctx = canvas.getContext('2d');
+		else throw "Canvasが対応していないようです"
+		this.Scalex = 1;
+		this.Scaley = 1;
+		var This = this;
+		(function (Fn) {
+			var i;
+			window.addEventListener('resize', () => {
+				if (i !== false) { clearTimeout(i); }
+				i = setTimeout(Fn, 100);
+			});
+		})(() => this.OnResize.call(This));
+		this.OnResize();
+	}
+	static Color(r, g, b) {
+		'rgb(' + (r << 0) + ',' + (g << 0) + ',' + (b << 0) + ')'
+	}
+	OnResize() {
+		let Canvas = this.ctx.canvas;
+		this.Scalex = (window.devicePixelRatio || 1) * this.Parent.clientWidth;
+		this.Scaley = (window.devicePixelRatio || 1) * this.Parent.clientHeight;
+		Canvas.width = this.Scalex << 0;
+		Canvas.height = this.Scaley << 0;
+		Canvas.style.width = this.Parent.clientWidth + "px";
+		Canvas.style.height = this.Parent.clientHeight + "px";
+		this.ctx.lineWidth = window.devicePixelRatio || 1;
+	}
+	Path(Fn) {
+		this.ctx.beginPath();
+		var Result = Fn();
+		if ("Fill" in Result) {
+			this.ctx.fillStyle = Result.Fill;
+			this.ctx.fill();
+		}
+		if ("Stroke" in Result) {
+			this.ctx.strokeStyle = Result.Stroke;
+			this.ctx.stroke();
+		}
+	}
+	Alpha(alpha) {
+		this.ctx.globalAlpha = alpha;
+	}
+	Line(x1, y1, x2, y2) {
+		this.ctx.moveTo((x1 * this.Scalex) << 0, (y1 * this.Scaley) << 0);
+		this.ctx.lineTo((x2 * this.Scalex) << 0, (y2 * this.Scaley) << 0);
+	}
+	Rect(x, y, w, h) {
+		this.ctx.rect(
+			(x * this.Scalex) << 0, (y * this.Scaley) << 0,
+			(w * this.Scalex) << 0, (h * this.Scaley) << 0
+		);
+	}
+	Round(x, y, r) {
+		this.ctx.arc((x * this.Scalex) << 0, (y * this.Scaley) << 0, (r * Math.min(this.Scalex, this.Scaley)) << 0, -0.5 * Math.PI, 2 * Math.PI);
+	}
+	LongRound(x, y, h, r) {
+		this.ctx.arc((x * this.Scalex) << 0, (y * this.Scaley) << 0, (r * Math.min(this.Scalex, this.Scaley)) << 0, -Math.PI, 0);
+		this.ctx.arc((x * this.Scalex) << 0, ((y + h) * this.Scaley) << 0, (r * Math.min(this.Scalex, this.Scaley)) << 0, 0, -Math.PI);
+	}
+	Fill(Style, globalCompositeOperation) {
+		let Tmp = this.ctx.fillStyle;
+		let Tmp2 = this.ctx.globalCompositeOperation;
+		this.ctx.fillStyle = Style;
+		this.ctx.globalCompositeOperation = Util.OptArg(globalCompositeOperation, 'source-over');
+		this.ctx.fillRect(0, 0, this.Scalex << 0, this.Scaley << 0);
+		this.ctx.fillStyle = Tmp;
+		this.ctx.globalCompositeOperation = Tmp2;
+	}
+}
+var Game = {
+	_: { Keys: [83, 68, 70, 32, 74, 75, 76], ReadyTime: 1000, BorderY: 0.8, Radius: 1 / 2, MaxScoreLimitGOSA: 50, LimitGOSA: 100, MistakeScore: -100 },
+	Audio: new Audio(),//Overwritten by Init
+	Draw: undefined,//Overwritten by Game.OnLoad
+	Lines: [{ Color: [0], Nodes: [{ Time: [], _: { Pressed: false } }] }],//Overwritten by Init
+	MakingMode: false,//Trueのとき、Lines.Nodesがsortされているとは限らない
+	AutoMode: false,
+	NodeText: "",//Overwritten by setting.js
+	MusicFile: "",//Overwritten by setting.js
+	FinishTime: 0,//Overwritten by Init
+	Speed: 5000,/////Overwritten by ReflushPreview
+	Score: 0,//Overwritten by Init
+	Combo: 0,//Overwritten by Init
+	Init: () => {
+		Game.Nodes = [];
+		Game.Lines = [];
+		Game._.Keys.forEach(v => Game.Lines.push({ Color: [0], Nodes: [] }));
+		Util.LoadScript(SongList[Number.parseInt(GetElm("song").getAttribute("song"))].Folder + "/setting.js", () => {
+			Game.Audio = new Audio(Game.MusicFile);
+			Game.Audio.preload = "auto";
+			Game.Score = 0;
+			Game.Combo = 0;
+			Game.FinishTime = Infinity;
+			Game.NodeText.split(" ").forEach((word) => {
+				var tmp = word.split(":").map(v => Number.parseInt(v));
+				if (tmp.length == 1) {
+					Game.FinishTime = tmp[0];
+				} else {
+					Game.Lines[tmp[0]].Nodes.push({ Time: tmp.slice(1), _: { Pressed: false } });
+				}
+			});
+			Game.Lines.forEach((line) => { line.Nodes = line.Nodes.sort((a, b) => a.Time[0] - b.Time[0]); });
+			Game.Audio.onended = () => {
+				console.log("Fin");
+				Game.OnFin();
+			};
+			Game.Audio.play();
+			Game.Tick();
+		});
+	}, Tick: () => {
+		if (!Game.Audio.currentTime > Game.FinishTime) {
+			Game.OnFin();
+			return;
+		}
+		var now = Game.Audio.currentTime;
+		Game.Draw.ctx.clearRect(0, 0, Game.Draw.Scalex, Game.Draw.Scaley);
+		Game.Lines.forEach((line, i) => {
+			line.Color *= 0.8;
+			var Color = `hsl(${line.Color * 60 + 60},100%,50%)`;
+			var ColorOfNode = `hsla(${line.Color * 60 +60},100%,50%,0.5)`;
+			var Linex = 1 / Game.Lines.length * (i + 0.5);
+			var Ry = Game._.Radius / Game.Lines.length * (Game.Draw.Scalex > Game.Draw.Scaley ? 1 : Game.Draw.Scalex / Game.Draw.Scaley);
+			Game.Draw.Path(() => {
+				Game.Draw.Line(Linex, 0, Linex, Game._.BorderY - Ry);
+				Game.Draw.Round(Linex, Game._.BorderY, Game._.Radius / Game.Lines.length);
+				return { Stroke: Color };//TODO
+			});
+
+			Game.Draw.ctx.globalCompositeOperation = "lighter";
+			line.Nodes.some((node) => {
+				switch (node.Time.length) {
+					case 1:
+						var y = Math.pow(1 - ((node.Time[0] - now) / Game.Speed), 5) * (Game._.BorderY + Ry) - Ry;
+						if (y < -Ry) return Game.MakingMode;
+						if (y > 1 + Ry) return false;
+						if (y > Ry && Game.AutoMode)
+							node._.Pressed = true;
+						Game.Draw.Path(() => {
+							Game.Draw.Round(Linex, y, Game._.Radius / Game.Lines.length);
+							if (node._.Pressed)
+								return { Stroke: ColorOfNode };
+							else
+								return { Fill: ColorOfNode };
+						});
+						break;
+					case 2:
+						var y1 = Math.pow(1 - ((node.Time[0] - now) / Game.Speed), 5) * (Game._.BorderY + Ry) - Ry;//下
+						var y2 = Math.pow(1 - ((node.Time[1] - now) / Game.Speed), 5) * (Game._.BorderY + Ry) - Ry;//上
+						if (y1 < -Ry) return Game.MakingMode;
+						if (y2 > 1 + Ry) return false;
+						if (y > Ry && Game.AutoMode)
+							node._.Pressed = true;
+						Game.Draw.Path(() => {
+							Game.Draw.LongRound(Linex, y2, y1 - y2, Game._.Radius / Game.Lines.length);
+							if (node._.Pressed)
+								return { Stroke: ColorOfNode };
+							else
+								return { Fill: ColorOfNode };
+						});
+						break;
+				}
+				Game.Draw.ctx.globalCompositeOperation = "source-over";
+				return false;
+			})
+		});
+		requestAnimationFrame(Game.Tick);
+	}, OnKey: (isUp, Key, Other) => {
+		if (Game.AutoMode) return;
+		var now = Game.Audio.currentTime;
+		if (Game.MakingMode && !isUp) {
+			switch (Key) {
+				case 13: //Enter: Finish
+					Game.FinishTime = now;
+					console.log("--DATA--");
+					var NodeTexts = [];
+					Game.Lines.forEach((v, i) => {
+						var Texts = [];
+						NodeTexts += v.Nodes.sort((a, b) => a.Time[0] - b.Time[0]).forEach((v) => {
+							Texts.push(i + ":" + v.Time.join(":"));
+						});
+						NodeTexts.push(Texts.join(" "));
+					});
+					NodeTexts.push(Game.FinishTime);
+					console.log('Game.NodeText = "' + NodeTexts.join(" ") + '";');
+					return;
+				case 67: //C: SpeedDown
+					Game.Audio.playbackRate = Math.min(4, Math.max(0.2, Game.Audio.playbackRate - 0.05));
+					console.log("Speed: " + Game.Audio.playbackRate);
+					return;
+				case 86: //V: SpeedUp
+					Game.Audio.playbackRate = Math.min(4, Math.max(0.2, Game.Audio.playbackRate + 0.05));
+					console.log("Speed: " + Game.Audio.playbackRate);
+					return;
+				case 90: //Z: 戻る
+					Game.Audio.currentTime = Math.max(0, Game.Audio.currentTime - 0.5);
+					console.log("Time: " + Game.Audio.currentTime);
+					return;
+				case 88: //X: 進む
+					Game.Audio.currentTime = Math.max(0, Game.Audio.currentTime + 0.5);
+					console.log("Time: " + Game.Audio.currentTime);
+					return;
+			}
+		}
+		if (Key == 78) {//N: Pause
+			Game.Audio.pause();
+			return;
+		} if (Key == 77) {//M: Restart
+			Game.Audio.play();
+			return;
+		}
+		if (!Game.Audio.played) return;
+		Game._.Keys.some(function (key, i) {
+			if (key == Key) {
+				if (Game.MakingMode && !Other.Shift) {
+					if (!isUp) {
+						Game.Lines[i].Nodes.push({ Time: [now << 0], _: { Pressed: false } });//TODO: Add Long node
+					}
+					return true;
+				}
+				var This = { ID: -1, Timespan: Infinity };//Timespan: now-node[0]
+				Game.Lines[i].Nodes.forEach((node, i) => {
+					var span = 0;
+					switch (node.Time.length) {
+						case 1:
+							span = now - node.Time[0];
+							break;
+						case 2:
+							if (node.Time[0] < now)
+								if (now < node.Time[1])
+									span = 0;
+								else
+									span = now - node.Time[1];
+							else
+								span = now - node.Time[0];
+							break;
+					}
+					if (Math.abs(span) < Math.abs(This.Timespan)) {
+						This = { ID: i, Timespan: span };
+					}
+				});
+
+				if (Game.MakingMode) {
+					if (This.ID >= 0 && !isUp) Game.Lines[i].Nodes.splice(This.ID, 1);
+				} else {
+					if (This.ID >= 0 && Math.abs(This.Timespan) < Game._.LimitGOSA) {
+						Game.Lines[i].Color = Math.sign(This.Timespan) * (Math.max(Math.abs(This.Timespan), Game._.MaxScoreLimitGOSA) - Game._.MaxScoreLimitGOSA) / (Game._.LimitGOSA - Game._.MaxScoreLimitGOSA);
+						Game.Lines[i].Nodes[This.ID]._.Pressed = true;//TODO LongNode
+						Game.Combo = Math.min(Game.Combo + 1, 5);
+						Game.Score += (Game.Combo / Math.pow((
+							Math.max(Math.abs(This.Timespan), Game._.MaxScoreLimitGOSA) - Game._.MaxScoreLimitGOSA) / (Game._.LimitGOSA - Game._.MaxScoreLimitGOSA) //0:Good ~ 1:Bad
+							* 0.9 + 0.1 //.1:Good ~ 1:Bad
+							, 2) * 5.1 + 490) << 0;//1000*Combo:Good ~ 500*Combo:Bad
+					} else {
+						Game.Combo = 0;
+						Game.Score += Game._.MistakeScore;
+					}
+				}
+				//TODO:Line color
+				return true;
+			}
+			return false;
+		});
+	}, OnFin: () => {
+		if (!Game.AutoMode)
+			ShowFin();//TODO
+		else {
+			Game.Init();
+		}
+	}, OnLoad: () => {
+		Game.Draw = new Drawing(GetElm("c1"), GetElm("game"));
+		document.onkeydown = (e) => {
+			if (!e) e = window.event;
+			Game.OnKey(false, e.keyCode, { Shift: e.shiftKey, Ctrl: e.ctrlKey });
+		}
+		document.onkeyup = (e) => {
+			if (!e) e = window.event;
+			Game.OnKey(true, e.keyCode, { Shift: e.shiftKey, Ctrl: e.ctrlKey });
+		}
+	}//Document.onload
+}
+
 var UI = {
 	DOMs: {
 		Title: undefined
@@ -254,5 +542,6 @@ var Util = {
 Util.Polyfill();
 window.addEventListener("load", () => {
 	UI.Onload();
+	Game.OnLoad();
 	Onload();
 });
