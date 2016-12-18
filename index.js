@@ -338,7 +338,7 @@ var Game = {
 			var Linex = 1 / Game.Lines.length * (i + 0.5);
 			var Ry = Game._.Radius / Game.Lines.length * (Game.Draw.Scalex > Game.Draw.Scaley ? 1 : Game.Draw.Scalex / Game.Draw.Scaley);
 			Game.Draw.Path(() => {
-				/*Game.Draw.Line(Linex, 0, Linex, Game._.BorderY - Ry);*/
+				if(i*2==Game._.Keys.length-1)Game.Draw.Line(Linex, 0, Linex, Game._.BorderY - Ry);
 				Game.Draw.Round(Linex, Game._.BorderY, Game._.Radius / Game.Lines.length);
 				return { Stroke: Color };
 			});
