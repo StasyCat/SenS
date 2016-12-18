@@ -261,8 +261,8 @@ var Game = {
 			if (!Game.AutoMode || MusicFile != Game.MusicFile) {
 				Game.MusicFile = MusicFile;
 				Game.Audio.src = (SongList[Number.parseInt(GetElm("song").getAttribute("song"))].Folder + "/" + MusicFile);
-				Game.Audio.currentTime = 0;
 			}
+			Game.Audio.currentTime = 0;
 			Game.Score = 0;
 			Game.Combo = 0;
 			Game.FinishTime = Infinity;
@@ -286,7 +286,7 @@ var Game = {
 			Game.Tick();
 		});
 	}, Tick: () => {
-		if (!GetElm("menu").classList.contains("fading2") && Game.Audio.currentTime * 1000 > Game.FinishTime) {
+		if (Game.Audio.currentTime * 1000 > Game.FinishTime && GetElm("fin").classList.contains("fading2")) {
 			Game.OnFin();
 			return;
 		}
@@ -450,7 +450,7 @@ var Game = {
 			Game._.MakingLongKeys.some((key, i) => {
 				if (key == Key) {
 					if (!isUp) {
-						Game.Lines[i].Nodes.push({ Time: [now << 0, (Game.Audio.duration * 1000) << 0], _: { Pressed: false,KeyDowned:false } });
+						Game.Lines[i].Nodes.push({ Time: [now << 0, (Game.Audio.duration * 1000) << 0], _: { Pressed: false, KeyDowned: false } });
 						Game_Onkey_MakingLong[i] = Game.Lines[i].Nodes.length - 1;
 					} else {
 						Game.Lines[i].Nodes[Game_Onkey_MakingLong[i]].Time[1] = now << 0;
@@ -460,10 +460,10 @@ var Game = {
 		}
 	}, OnFin: () => {
 		if (!Game.AutoMode) {
-			Game.AutoMode = true;
 			ShowFin();
-		}
+		} else {
 			Game.Init();
+		}	
 	}, OnLoad: () => {
 		Game.Audio = new Audio();
 		Game.Audio.preload = "auto";
@@ -487,7 +487,7 @@ var Game = {
 			if (!e) e = window.event;
 			if (!Game_Keyboard_[e.keyCode]) return;
 			Game_Keyboard_[e.keyCode] = false;
-			Game.OnKey(true, e.keyCode, { Shift: e.shiftKey});
+			Game.OnKey(true, e.keyCode, { Shift: e.shiftKey });
 		}
 	}//Document.onload
 }
