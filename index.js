@@ -710,7 +710,9 @@ var MyStorage = {
 
 Util.Polyfill();
 window.addEventListener("load", () => {
-	document.documentElement.requestFullscreen();
+	try {
+		document.documentElement.requestFullscreen();
+	}catch(e){}	
 	UI.Onload();
 	Game.OnLoad();
 	Onload();

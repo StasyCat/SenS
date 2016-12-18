@@ -42,13 +42,15 @@
 			font-size: 5vh;
 			vertical-align: middle;
 			box-shadow: 0 -10px 15px 11px #FFF;
-			padding-bottom: 0.5em;
-			max-height: 5vh;
-			margin-bottom: 0.5em;
 		}
 		#body>*{background-color: rgba(0,0,0,0.5)}
 		#song{text-align: left;}
-		#title,#prev,#next{text-align: center;}
+		#title,#prev,#next{
+			text-align: center;
+			padding-bottom: 0.5em;
+			max-height: 5vh;
+			margin-bottom: 0.5em;
+			}
 		#speed{text-align: right;}
 		#title,#song{
 			text-overflow: ellipsis;
@@ -225,44 +227,44 @@
 			</div>
 		</div>
 		<div style="text-align: center;" class="fading2" id="gameback">
-			<div style="top: 50%;
+<div style="top: 50%;
 			font-size: 10vmin;
 			position: relative;
 			margin-top: -5vmin;" id="score">
 
-			</div>
-		</div>
-		<div class="fading2" id="game">
-			<canvas id="c1"></canvas>
-		</div>
-		<div class="cV fading2" id="menu">
-			<div class="cH" id="inputs">
-				<div class="grow" id="song" song="_">Song...</div>
-				<div id="speed" speed="1">Speedx1.0</div>
-			</div>
-			<div class="grow" id="menubody">
-				<div class="cV fullH fullW scrollY fading2" id="detail">
-					<p class="grow scrollY" id="detailtext">
-						縦に7本レーンがありまして、左から順に、[S] [D] [F] [Space] [J] [K] [L] のキーを押して、落ちてくる譜面を叩いてください。
-					</p>
-					<p style="text-align: right;">作成者: 二人ほど。</p>
-				</div>
-				<div class="fullH fullW cV" id="selectsong">
-					<div class="fullW" id="filter">
-						<span id="tags-name">Loading...</span>
-						<div class="scrollX mL">
-							<ul class="cW fullW grow" id="tags">
-							</ul>
-						</div>
-					</div>
-					<div class="fullW grow scrollY" id="songs">
-						<ul class="fullW fullH listV" id="songlist">
-						</ul>
-					</div>
-				</div>
-			</div>
+</div>
+</div>
+<div class="fading2" id="game">
+	<canvas id="c1"></canvas>
+</div>
+<div class="cV fading2" id="menu">
+	<div class="cH" id="inputs">
+		<div class="grow" id="song" song="_">Song...</div>
+		<div id="speed" speed="1">Speedx1.0</div>
+	</div>
+	<div class="grow" id="menubody">
+		<div class="cV fullH fullW scrollY fading2" id="detail">
+			<p class="grow scrollY" id="detailtext">
+				縦に7本レーンがありまして、左から順に、[S] [D] [F] [Space] [J] [K] [L] のキーを押して、落ちてくる譜面を叩いてください。
+			</p>
+			<p style="text-align: right;">作成者: 二人ほど。</p>
+</div>
+<div class="fullH fullW cV" id="selectsong">
+	<div class="fullW" id="filter">
+		<span id="tags-name">Loading...</span>
+		<div class="scrollX mL">
+			<ul class="cW fullW grow" id="tags">
+			</ul>
 		</div>
 	</div>
+	<div class="fullW grow scrollY" id="songs">
+		<ul class="fullW fullH listV" id="songlist">
+		</ul>
+	</div>
+</div>
+</div>
+</div>
+</div>
 </div>
 </body>
 
