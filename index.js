@@ -338,10 +338,12 @@ var Game = {
 			var Linex = 1 / Game.Lines.length * (i + 0.5);
 			var Ry = Game._.Radius / Game.Lines.length * (Game.Draw.Scalex > Game.Draw.Scaley ? 1 : Game.Draw.Scalex / Game.Draw.Scaley);
 			Game.Draw.Path(() => {
-				if(i*2==Game._.Keys.length-1)Game.Draw.Line(Linex, 0, Linex, Game._.BorderY - Ry);
+				if (i * 2 == Game._.Keys.length - 1) Game.Draw.Line(Linex, 0, Linex, Game._.BorderY - Ry);
 				Game.Draw.Round(Linex, Game._.BorderY, Game._.Radius / Game.Lines.length);
 				return { Stroke: Color };
 			});
+			Game.Draw.ctx.fillStyle = ColorOfNode;
+			Game.Draw.ctx.strokeStyle = ColorOfNode;
 			line.Nodes.some((node) => {
 				switch (node.Time.length) {
 					case 1:
@@ -350,13 +352,12 @@ var Game = {
 						if (y > 1 + Ry) return false;
 						if (y > Game._.BorderY && Game.AutoMode)
 							node._.Pressed = true;
-						Game.Draw.Path(() => {
-							Game.Draw.Round(Linex, y, Game._.Radius / Game.Lines.length);
-							if (node._.Pressed)
-								return { Stroke: ColorOfNode };
-							else
-								return { Fill: ColorOfNode };
-						});
+						Game.Draw.ctx.beginPath();
+						Game.Draw.Round(Linex, y, Game._.Radius / Game.Lines.length);
+						if (node._.Pressed)
+							Game.Draw.ctx.stroke();
+						else
+							Game.Draw.ctx.fill();
 						break;
 					case 2:
 						var y1 = Math.pow(1 - ((node.Time[0] - now) / Game.Speed), 5) * (Game._.BorderY + Ry) - Ry;//小さい
@@ -365,13 +366,12 @@ var Game = {
 						if (y2 > 1 + Ry) return false;
 						if (y2 > Game._.BorderY && Game.AutoMode)
 							node._.Pressed = true;
-						Game.Draw.Path(() => {
-							Game.Draw.LongRound(Linex, y2, y1 - y2, Game._.Radius / Game.Lines.length);
-							if (node._.Pressed)
-								return { Stroke: ColorOfNode };
-							else
-								return { Fill: ColorOfNode };
-						});
+						Game.Draw.ctx.beginPath();
+						Game.Draw.LongRound(Linex, y2, y1 - y2, Game._.Radius / Game.Lines.length);
+						if (node._.Pressed)
+							Game.Draw.ctx.stroke();
+						else
+							Game.Draw.ctx.fill();
 						break;
 				}
 				return false;
@@ -696,7 +696,7 @@ var MyStorage = {
 		var Prev = [];
 		try {
 			Prev = JSON.parse(localStorage.getItem(FolderName));
-		} catch (e){
+		} catch (e) {
 			Prev = [];
 		}
 		Prev.push(Data);
@@ -709,7 +709,7 @@ Util.Polyfill();
 window.addEventListener("load", () => {
 	try {
 		document.documentElement.requestFullscreen();
-	}catch(e){}	
+	} catch (e) { }
 	UI.Onload();
 	Game.OnLoad();
 	Onload();
