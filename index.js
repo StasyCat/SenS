@@ -256,7 +256,7 @@ var Game = {
 	Init: () => {
 		Game.Nodes = [];
 		Game.Lines = [];
-		Game._.Keys.forEach(v => Game.Lines.push({ Color: 0, Light: 0, Nodes: [] }));
+		Game._.Keys.forEach(() => Game.Lines.push({ Color: 0, Light: 0, Nodes: [] }));
 		Util.LoadScript(SongList[Number.parseInt(GetElm("song").getAttribute("song"))].Folder + "/setting.js", () => {
 			if (!Game.AutoMode || MusicFile != Game.MusicFile) {
 				Game.MusicFile = MusicFile;
@@ -489,6 +489,18 @@ var Game = {
 			Game_Keyboard_[e.keyCode] = false;
 			Game.OnKey(true, e.keyCode, { Shift: e.shiftKey });
 		}
+		Game.Draw.ctx.canvas.addEventListener('touchstart', function (e) {
+			console.log(e.touches.item(0).clientX);
+			console.log(Game.Draw.Scalex);
+			if (!e) e = window.event;
+			for (let i = 0; i < e.touches.length; i++)
+				Game.OnKey(false, Game._.Keys[(e.touches.item(i).clientX / (Game.Draw.Parent.clientWidth/ Game._.Keys.length)) << 0] );
+		});
+		Game.Draw.ctx.canvas.addEventListener('touchend', function (e) {
+			if (!e) e = window.event;
+			for (let i = 0; i < e.touches.length; i++)
+				Game.OnKey(true, Game._.Keys[(e.touches.item(i).clientX / (Game.Draw.Parent.clientWidth / Game._.Keys.length)) << 0]);
+		});
 	}//Document.onload
 }
 var Game_Keyboard_ = {
