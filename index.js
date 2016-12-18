@@ -286,7 +286,7 @@ var Game = {
 			Game.Tick();
 		});
 	}, Tick: () => {
-		if (Game.Audio.currentTime * 1000 > Game.FinishTime) {
+		if (!Game.AutoMode && Game.Audio.currentTime * 1000 > Game.FinishTime) {
 			Game.OnFin();
 			return;
 		}
@@ -462,9 +462,8 @@ var Game = {
 		if (!Game.AutoMode) {
 			Game.AutoMode = true;
 			ShowFin();
-		} else {
-			Game.Init();
 		}
+			Game.Init();
 	}, OnLoad: () => {
 		Game.Audio = new Audio();
 		Game.Audio.preload = "auto";

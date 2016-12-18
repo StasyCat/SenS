@@ -1,0 +1,21 @@
+// Place your settings in this file to overwrite the default settings
+{
+	"editor.wrappingColumn": 0,
+	"editor.fontFamily": "ricty diminished,consolas, 'Courier New', monospace",
+	"editor.fontSize": 15,
+	"editor.tabSize": 2,
+	"editor.insertSpaces": false,
+	"editor.formatOnType": true,
+	"editor.renderIndentGuides": true,
+	"editor.hideCursorInOverviewRuler": true,
+	"files.autoSave": "off",
+	"typescript.check.tscVersion": false,
+	"window.zoomLevel": 0,
+	"extensions.autoUpdate": true,
+	"editor.useTabStops": true,
+	"editor.tabCompletion": true,
+	"editor.stablePeek": false,
+	"editor.wordWrap": true,
+	"editor.wrappingIndent": "indent",
+	"editor.renderControlCharacters": true
+}
