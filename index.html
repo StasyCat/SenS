@@ -135,7 +135,10 @@
 		#next.activebtn,#prev.activebtn{
 			animation-direction: normal;
 		}
-		#song,#speed,#name,#songlist>*,.activebtn {
+		.activebtn,#gameback{
+			user-select: none;
+		}
+		#song,#speed,#name,#songlist>* {
 			animation: active-btn 0.75s ease-in-out alternate infinite backwards;
 			cursor: pointer;
 			user-select: none;
@@ -148,11 +151,11 @@
 		.selbtn{
 			animation: selected-btn 0.75s ease-in-out alternate infinite backwards !important;
 			cursor: default;
-			user-select: none;
+			user-select: pointer;
 		}
 		.unselbtn,#tags>* {
 			animation: unselected-btn 1s ease-in-out alternate infinite backwards;
-			cursor: default;
+			cursor: pointer;
 			user-select: none;
 		}
 		.fading1 {

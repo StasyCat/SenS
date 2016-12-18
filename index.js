@@ -270,7 +270,8 @@ var Game = {
 				var tmp = word.split(":").map(v => Number.parseInt(v));
 				switch (tmp.length) {
 					case 1:
-						Game.FinishTime = tmp[0];
+						if (!Game.MakingMode)
+							Game.FinishTime = tmp[0];
 						break;
 					case 2:
 						Game.Lines[tmp[0]].Nodes.push({ Time: tmp.slice(1), _: { Pressed: false } });
@@ -310,7 +311,7 @@ var Game = {
 				switch (node.Time.length) {
 					case 1:
 						var y = Math.pow(1 - ((node.Time[0] - now) / Game.Speed), 5) * (Game._.BorderY + Ry) - Ry;
-						if (y < -Ry) return Game.MakingMode;
+						if (y < -Ry) return !Game.MakingMode;
 						if (y > 1 + Ry) return false;
 						if (y > Game._.BorderY && Game.AutoMode)
 							node._.Pressed = true;
@@ -325,7 +326,7 @@ var Game = {
 					case 2:
 						var y1 = Math.pow(1 - ((node.Time[0] - now) / Game.Speed), 5) * (Game._.BorderY + Ry) - Ry;//小さい
 						var y2 = Math.pow(1 - ((node.Time[1] - now) / Game.Speed), 5) * (Game._.BorderY + Ry) - Ry;//大きい
-						if (y1 < -Ry) return Game.MakingMode;
+						if (y1 < -Ry) return !Game.MakingMode;
 						if (y2 > 1 + Ry) return false;
 						if (y2 > Game._.BorderY && Game.AutoMode)
 							node._.Pressed = true;
@@ -344,126 +345,121 @@ var Game = {
 		});
 		requestAnimationFrame(Game.Tick);
 	}, OnKey: (isUp, Key, Other) => {
-		//TODO:Making-Assist
 		if (Game.AutoMode) return;
 		var now = Game.Audio.currentTime * 1000;
-		if (Game.MakingMode && !isUp) {
-			switch (Key) {
-				case 13: //Enter: Finish
-					Game.FinishTime = now;
-					console.log("--DATA--");
-					var NodeTexts = [];
-					Game.Lines.forEach((v, i) => {
-						var Texts = [];
-						v.Nodes.sort((a, b) => a.Time[0] - b.Time[0]).forEach((v) => {
-							Texts.push(i + ":" + v.Time.join(":"));
-						});
-						NodeTexts.push(Texts.join(" "));
-					});
-					NodeTexts.push(Game.FinishTime);
-					console.log('NodeText = "' + NodeTexts.join(" ") + '";');
-					return;
-				case 67: //C: SpeedDown
-					Game.Audio.playbackRate = Math.min(4, Math.max(0.2, Game.Audio.playbackRate - 0.05));
-					console.log("Speed: " + Game.Audio.playbackRate);
-					return;
-				case 86: //V: SpeedUp
-					Game.Audio.playbackRate = Math.min(4, Math.max(0.2, Game.Audio.playbackRate + 0.05));
-					console.log("Speed: " + Game.Audio.playbackRate);
-					return;
-				case 90: //Z: 戻る
-					Game.Audio.currentTime = Math.max(0, Game.Audio.currentTime - 0.5);
-					console.log("Time: " + Game.Audio.currentTime);
-					return;
-				case 88: //X: 進む
-					Game.Audio.currentTime = Math.max(0, Game.Audio.currentTime + 0.5);
-					console.log("Time: " + Game.Audio.currentTime);
-					return;
-			}
-		}
 		if (Key == 78) {//N: Pause
+			if (isUp) return;
 			Game.Audio.pause();
 			return;
 		} if (Key == 77) {//M: Restart
+			if (isUp) return;
 			Game.Audio.play();
 			return;
 		}
 		if (!Game.MakingMode && !Game.Audio.played) return;
-		Game._.Keys.some((key, i) => {
+		var Found = Game._.Keys.some((key, i) => {
 			if (key == Key) {
-				if (Game.MakingMode && !Other.Shift) {
+				if (Game.MakingMode && Other.Ctrl) {
+					if (!isUp) {
+						var This = { ID: -1, Timespan: Infinity };//Timespan: now-node[0]
+						Game.Lines[0].Nodes.forEach((node, i) => {
+							if (node._.Pressed && node.Time.length == 1)
+								if (Math.abs(now - node.Time[0]) < Math.abs(This.Timespan))
+									This = { ID: i, Timespan: now - node.Time[0] };
+						});
+						if (This.ID >= 0) {
+							Game.Lines[i].Nodes.push({ Time: [Game.Lines[0].Nodes[This.ID].Time[0]], _: { Pressed: false } });
+							if (Other.Shift)
+								Game.Lines[0].Nodes.splice(This.ID, 1);
+						}
+					}
+				} else if (Game.MakingMode && !Other.Shift) {//-Shift -Ctrl
 					if (!isUp) {
 						Game.Lines[i].Nodes.push({ Time: [now << 0], _: { Pressed: false } });
 					}
-					return true;
-				}
-				var This = { ID: -1, Timespan: Infinity };//Timespan: now-node[0]
-				Game.Lines[i].Nodes.forEach((node, i) => {
-					var span = Infinity;
-					switch (node.Time.length) {
-						case 1:
-							if (!isUp && !node._.Pressed)
-								span = now - node.Time[0];
-							break;
-						case 2:
-							if (isUp && node._.KeyDowned) {
-								span = now - node.Time[1];
-							} else if (!isUp && !node._.KeyDowned) {
-								span = now - node.Time[0];
-							}
-							break;
-					}
-					if (Math.abs(span) < Math.abs(This.Timespan))
-						This = { ID: i, Timespan: span };
-				});
-
-				if (Game.MakingMode) {
-					if (This.ID >= 0 && !isUp) Game.Lines[i].Nodes.splice(This.ID, 1);
 				} else {
-					if (This.ID >= 0 && Math.abs(This.Timespan) < Game._.LimitGOSA) {
-						switch (Game.Lines[i].Nodes[This.ID].Time.length) {
+					var This = { ID: -1, Timespan: Infinity };//Timespan: now-node[0]
+					Game.Lines[i].Nodes.forEach((node, i) => {
+						var span = Infinity;
+						switch (node.Time.length) {
 							case 1:
-								Game.Lines[i].Nodes[This.ID]._.Pressed = true;
+								if (!isUp && !node._.Pressed)
+									span = now - node.Time[0];
+								break;
 							case 2:
-								if (isUp)
-									Game.Lines[i].Nodes[This.ID]._.Pressed = true;
-								else
-									Game.Lines[i].Nodes[This.ID]._.KeyDowned = true;
+								if (isUp && node._.KeyDowned) {
+									span = now - node.Time[1];
+								} else if (!isUp && !node._.KeyDowned) {
+									span = now - node.Time[0];
+								}
+								break;
 						}
-						Game.Lines[i].Color = Math.sign(This.Timespan) * (Math.max(Math.abs(This.Timespan), Game._.MaxScoreLimitGOSA) - Game._.MaxScoreLimitGOSA) / (Game._.LimitGOSA - Game._.MaxScoreLimitGOSA);
-						Game.Lines[i].Light = 1;
-						Game.Combo = Math.min(Game.Combo + 1, 5);
-						Game.Score += (Game.Combo / Math.pow((
-							Math.max(Math.abs(This.Timespan), Game._.MaxScoreLimitGOSA) - Game._.MaxScoreLimitGOSA) / (Game._.LimitGOSA - Game._.MaxScoreLimitGOSA) //0:Good ~ 1:Bad
-							* 0.9 + 0.1 //.1:Good ~ 1:Bad
-							, 2) * 5.1 + 490) << 0;//1000*Combo:Good ~ 500*Combo:Bad
-					} else if (!isUp) {
-						Game.Combo = 0;
-						Game.Score += Game._.MistakeScore;
+						if (Math.abs(span) < Math.abs(This.Timespan))
+							This = { ID: i, Timespan: span };
+					});
+
+					if (Game.MakingMode) {//Shift -Ctrl
+						if (This.ID >= 0 && !isUp) Game.Lines[i].Nodes.splice(This.ID, 1);
+					} else {
+						if (This.ID >= 0 && Math.abs(This.Timespan) < Game._.LimitGOSA) {
+							switch (Game.Lines[i].Nodes[This.ID].Time.length) {
+								case 1:
+									Game.Lines[i].Nodes[This.ID]._.Pressed = true;
+								case 2:
+									if (isUp)
+										Game.Lines[i].Nodes[This.ID]._.Pressed = true;
+									else
+										Game.Lines[i].Nodes[This.ID]._.KeyDowned = true;
+							}
+							Game.Lines[i].Color = Math.sign(This.Timespan) * (Math.max(Math.abs(This.Timespan), Game._.MaxScoreLimitGOSA) - Game._.MaxScoreLimitGOSA) / (Game._.LimitGOSA - Game._.MaxScoreLimitGOSA);
+							Game.Lines[i].Light = 1;
+							Game.Combo = Math.min(Game.Combo + 1, 5);
+							Game.Score += (Game.Combo / Math.pow((
+								Math.max(Math.abs(This.Timespan), Game._.MaxScoreLimitGOSA) - Game._.MaxScoreLimitGOSA) / (Game._.LimitGOSA - Game._.MaxScoreLimitGOSA) //0:Good ~ 1:Bad
+								* 0.9 + 0.1 //.1:Good ~ 1:Bad
+								, 2) * 5.1 + 490) << 0;//1000*Combo:Good ~ 500*Combo:Bad
+						} else if (!isUp) {
+							Game.Combo = 0;
+							Game.Score += Game._.MistakeScore;
+						}
 					}
 				}
 				return true;
 			}
-			return false;
 		});
-		if (Game.MakingMode) {
-			Game._.MakingLongKeys.some((key, i) => {
+		if (Game.MakingMode && !Found) {
+			Found = Game._.MakingLongKeys.some((key, i) => {
 				if (key == Key) {
 					if (!isUp) {
-						Game.Lines[i].Nodes.push({ Time: [now << 0, (Game.Audio.duration * 1000) << 0], _: { Pressed: false, KeyDowned: false } });
+						Game.Lines[i].Nodes.push({ Time: [now << 0, (now + 10000) << 0], _: { Pressed: false, KeyDowned: false } });
 						Game_Onkey_MakingLong[i] = Game.Lines[i].Nodes.length - 1;
 					} else {
 						Game.Lines[i].Nodes[Game_Onkey_MakingLong[i]].Time[1] = now << 0;
 					}
+					return true;
 				}
 			});
+			if (!Found) {//Press other keys => timing assist
+				if (isUp) return;
+				if (Other.Shift) {
+					var This = { ID: -1, Timespan: Infinity };//Timespan: now-node[0]
+					Game.Lines[0].Nodes.forEach((node, i) => {
+						if (node._.Pressed && node.Time.length == 1)
+							if (Math.abs(now - node.Time[0]) < Math.abs(This.Timespan))
+								This = { ID: i, Timespan: now - node.Time[0] };
+					});
+					if (This.ID >= 0)
+						Game.Lines[0].Nodes.splice(This.ID, 1);
+				} else
+					Game.Lines[0].Nodes.push({ Time: [now << 0], _: { Pressed: true } });
+			}
 		}
 	}, OnFin: () => {
 		if (!Game.AutoMode) {
 			ShowFin();
 		} else {
 			Game.Init();
-		}	
+		}
 	}, OnLoad: () => {
 		Game.Audio = new Audio();
 		Game.Audio.preload = "auto";
@@ -479,27 +475,76 @@ var Game = {
 		Game._.Keys.forEach((v) => Game_Keyboard_.Pressed[v] = false);
 		document.onkeydown = (e) => {
 			if (!e) e = window.event;
+			if (Game.MakingMode) {
+				switch (e.keyCode) {
+					case 13: //Enter: Finish
+						Game.FinishTime = Game.Audio.currentTime * 1000;
+						console.log("--DATA--");
+						var NodeTexts = [];
+						Game.Lines.forEach((v, i) => {
+							var Texts = [];
+							v.Nodes.sort((a, b) => a.Time[0] - b.Time[0]).forEach((v) => {
+								if (!v._.Pressed)
+									Texts.push(i + ":" + v.Time.join(":"));
+							});
+							NodeTexts.push(Texts.join(" "));
+						});
+						NodeTexts.push(Game.FinishTime);
+						console.log('NodeText = "' + NodeTexts.join(" ") + '";');
+						return;
+					case 67: //C: SpeedDown
+						Game.Audio.playbackRate = Math.min(4, Math.max(0.2, Game.Audio.playbackRate - 0.05));
+						console.log("Speed: " + Game.Audio.playbackRate);
+						return;
+					case 86: //V: SpeedUp
+						Game.Audio.playbackRate = Math.min(4, Math.max(0.2, Game.Audio.playbackRate + 0.05));
+						console.log("Speed: " + Game.Audio.playbackRate);
+						return;
+					case 90: //Z: 戻る
+						Game.Audio.currentTime = Math.max(0, Game.Audio.currentTime - 0.5);
+						console.log("Time: " + Game.Audio.currentTime);
+						return;
+					case 88: //X: 進む
+						Game.Audio.currentTime = Math.max(0, Game.Audio.currentTime + 0.5);
+						console.log("Time: " + Game.Audio.currentTime);
+						return;
+				}
+			}
 			if (Game_Keyboard_[e.keyCode]) return;
 			Game_Keyboard_[e.keyCode] = true;
-			Game.OnKey(false, e.keyCode, { Shift: e.shiftKey, });
+			Game.OnKey(false, e.keyCode, { Shift: e.shiftKey, Ctrl: e.ctrlKey });
+			if (Game.MakingMode && (e.shiftKey || e.ctrlKey))
+				if (e.preventDefault) {
+					e.preventDefault();
+				} else {
+					e.keyCode = 0;
+					return false;
+				}
 		}
 		document.onkeyup = (e) => {
 			if (!e) e = window.event;
 			if (!Game_Keyboard_[e.keyCode]) return;
 			Game_Keyboard_[e.keyCode] = false;
-			Game.OnKey(true, e.keyCode, { Shift: e.shiftKey });
+			Game.OnKey(true, e.keyCode, { Shift: e.shiftKey, Ctrl: e.ctrlKey });
+			if (Game.MakingMode && (e.shiftKey || e.ctrlKey))
+				if (e.preventDefault) {
+					e.preventDefault();
+				} else {
+					e.keyCode = 0;
+					return false;
+				}
 		}
 		Game.Draw.ctx.canvas.addEventListener('touchstart', function (e) {
 			console.log(e.touches.item(0).clientX);
 			console.log(Game.Draw.Scalex);
 			if (!e) e = window.event;
 			for (let i = 0; i < e.touches.length; i++)
-				Game.OnKey(false, Game._.Keys[(e.touches.item(i).clientX / (Game.Draw.Parent.clientWidth/ Game._.Keys.length)) << 0] );
+				Game.OnKey(false, Game._.Keys[(e.touches.item(i).clientX / (Game.Draw.Parent.clientWidth / Game._.Keys.length)) << 0], { Shift: false, Ctrl: false });
 		});
 		Game.Draw.ctx.canvas.addEventListener('touchend', function (e) {
 			if (!e) e = window.event;
 			for (let i = 0; i < e.touches.length; i++)
-				Game.OnKey(true, Game._.Keys[(e.touches.item(i).clientX / (Game.Draw.Parent.clientWidth / Game._.Keys.length)) << 0]);
+				Game.OnKey(true, Game._.Keys[(e.touches.item(i).clientX / (Game.Draw.Parent.clientWidth / Game._.Keys.length)) << 0] < { Shift: false, Ctrl: false });
 		});
 	}//Document.onload
 }
