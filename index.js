@@ -30,6 +30,7 @@ function ShowMenu() {
 	UI.ChangeTitle("Song/Speed", () => UI.Fadeout(GetElm("fin")));
 	UI.Fadein(GetElm("menu"));
 	UI.Fadein(GetElm("game"));
+	UI.Fadeout(GetElm("gameback"));
 	UI.Fadeout(GetElm("fin"));
 	UI.Fadein(GetElm("selectsong"), () => UI.Fadeout(GetElm("detail")));
 	UI.DeActiveBtn(GetElm("prev"));
@@ -114,6 +115,7 @@ function ShowGame() {
 	UI.ChangeTitle(GetElm("song").innerText);
 	UI.Fadeout(GetElm("menu"), CountingAndStart);
 	UI.Fadein(GetElm("game"), CountingAndStart);
+	UI.Fadein(GetElm("gameback"), CountingAndStart);
 	UI.Fadeout(GetElm("fin"), CountingAndStart);
 	UI.ActiveBtn(GetElm("prev"));
 	UI.DeActiveBtn(GetElm("next"));
@@ -143,9 +145,10 @@ function ReflushPreview() {
 
 
 function ShowFin() {
-	UI.ChangeTitle("Result");
+	UI.ChangeTitle("Result "+Game.Score+"pt");
 	UI.Fadeout(GetElm("menu"));
 	UI.Fadeout(GetElm("game"));
+	UI.Fadeout(GetElm("gameback"));
 	UI.Fadein(GetElm("fin"));
 	UI.ActiveBtn(GetElm("prev"));
 	UI.DeActiveBtn(GetElm("next"));
@@ -153,6 +156,7 @@ function ShowFin() {
 		GetElm("prev").removeEventListener("click", listener);
 		ShowMenu();
 	});
+	//TODO: Ranking
 }
 
 class Drawing {
@@ -234,23 +238,30 @@ var Game = {
 	Lines: [{ Color: 0, Light:0,Nodes: [{ Time: [], _: { Pressed: false } }] }],//Overwritten by Init
 	MakingMode: false,//Trueのとき、Lines.Nodesがsortされているとは限らない
 	AutoMode: false,
-	NodeText: "",//Overwritten by setting.js
-	MusicFile: "",//Overwritten by setting.js
+	MusicFile: "",//Overwritten by Init( プレビューへゲームから行くときに音楽が途切れないように)
 	FinishTime: 0,//Overwritten by Init
 	Speed: 5000,/////Overwritten by ReflushPreview
-	Score: 0,//Overwritten by Init
+	_score: 0,//Overwritten by Init
+	set Score(x) { this._score = x; GetElm("score").innerText = this._score; },
+	get Score() { return this._score; },
 	Combo: 0,//Overwritten by Init
 	Init: () => {
 		Game.Nodes = [];
 		Game.Lines = [];
 		Game._.Keys.forEach(v => Game.Lines.push({ Color: 0,Light:0, Nodes: [] }));
 		Util.LoadScript(SongList[Number.parseInt(GetElm("song").getAttribute("song"))].Folder + "/setting.js", () => {
-			Game.Audio.src=(SongList[Number.parseInt(GetElm("song").getAttribute("song"))].Folder + "/"+Game.MusicFile);
+			console.log(SongList[Number.parseInt(GetElm("song").getAttribute("song"))].Folder + "/" + MusicFile);
+			console.log(Game.MusicFile);
+			if (!Game.AutoMode || MusicFile!=Game.MusicFile) {
+				Game.MusicFile = MusicFile;
+				Game.Audio.src = (SongList[Number.parseInt(GetElm("song").getAttribute("song"))].Folder + "/" + MusicFile);
+				Game.Audio.currentTime = 0;
+			}
 			Game.Audio.preload = "auto";
 			Game.Score = 0;
 			Game.Combo = 0;
 			Game.FinishTime = Infinity;
-			Game.NodeText.split(" ").forEach((word) => {
+			NodeText.split(" ").forEach((word) => {
 				var tmp = word.split(":").map(v => Number.parseInt(v));
 				if (tmp.length == 1) {
 					Game.FinishTime = tmp[0];
@@ -283,7 +294,7 @@ var Game = {
 			Game.Draw.Path(() => {
 				Game.Draw.Line(Linex, 0, Linex, Game._.BorderY - Ry);
 				Game.Draw.Round(Linex, Game._.BorderY, Game._.Radius / Game.Lines.length);
-				return { Stroke: Color };//TODO
+				return { Stroke: Color };
 			});
 
 			Game.Draw.ctx.globalCompositeOperation = "lighter";
@@ -341,7 +352,7 @@ var Game = {
 						NodeTexts.push(Texts.join(" "));
 					});
 					NodeTexts.push(Game.FinishTime);
-					console.log('Game.NodeText = "' + NodeTexts.join(" ") + '";');
+					console.log('NodeText = "' + NodeTexts.join(" ") + '";');
 					return;
 				case 67: //C: SpeedDown
 					Game.Audio.playbackRate = Math.min(4, Math.max(0.2, Game.Audio.playbackRate - 0.05));
@@ -416,16 +427,16 @@ var Game = {
 						Game.Score += Game._.MistakeScore;
 					}
 				}
-				//TODO:Line color
 				return true;
 			}
 			return false;
 		});
 	}, OnFin: () => {
 		if (!Game.AutoMode)
-			ShowFin();//TODO
+			ShowFin();
 	}, OnLoad: () => {
 		Game.Audio = new Audio();
+		//Game.Audio.loop = true;
 		Game.Draw = new Drawing(GetElm("c1"), GetElm("game"));
 		document.onkeydown = (e) => {
 			if (!e) e = window.event;
