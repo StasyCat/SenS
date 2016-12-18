@@ -286,7 +286,7 @@ var Game = {
 			Game.Tick();
 		});
 	}, Tick: () => {
-		if (!Game.AutoMode && Game.Audio.currentTime * 1000 > Game.FinishTime) {
+		if (!GetElm("menu").classList.contains("fading2") && Game.Audio.currentTime * 1000 > Game.FinishTime) {
 			Game.OnFin();
 			return;
 		}
