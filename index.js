@@ -145,7 +145,7 @@ function ReflushPreview() {
 
 
 function ShowFin() {
-	UI.ChangeTitle("Result "+Game.Score+"pt");
+	UI.ChangeTitle("Result " + Game.Score + "pt");
 	UI.Fadeout(GetElm("menu"));
 	UI.Fadeout(GetElm("game"));
 	UI.Fadeout(GetElm("gameback"));
@@ -235,7 +235,7 @@ var Game = {
 	_: { Keys: [83, 68, 70, 32, 74, 75, 76], ReadyTime: 1000, BorderY: 0.8, Radius: 1 / 2, MaxScoreLimitGOSA: 50, LimitGOSA: 100, MistakeScore: -100 },
 	Audio: new Audio(),//Overwritten by Init
 	Draw: undefined,//Overwritten by Game.OnLoad
-	Lines: [{ Color: 0, Light:0,Nodes: [{ Time: [], _: { Pressed: false } }] }],//Overwritten by Init
+	Lines: [{ Color: 0, Light: 0, Nodes: [{ Time: [], _: { Pressed: false } }] }],//Overwritten by Init Time.len==3=> _.KeyDowned:false/true
 	MakingMode: false,//Trueのとき、Lines.Nodesがsortされているとは限らない
 	AutoMode: false,
 	MusicFile: "",//Overwritten by Init( プレビューへゲームから行くときに音楽が途切れないように)
@@ -248,11 +248,11 @@ var Game = {
 	Init: () => {
 		Game.Nodes = [];
 		Game.Lines = [];
-		Game._.Keys.forEach(v => Game.Lines.push({ Color: 0,Light:0, Nodes: [] }));
+		Game._.Keys.forEach(v => Game.Lines.push({ Color: 0, Light: 0, Nodes: [] }));
 		Util.LoadScript(SongList[Number.parseInt(GetElm("song").getAttribute("song"))].Folder + "/setting.js", () => {
 			console.log(SongList[Number.parseInt(GetElm("song").getAttribute("song"))].Folder + "/" + MusicFile);
 			console.log(Game.MusicFile);
-			if (!Game.AutoMode || MusicFile!=Game.MusicFile) {
+			if (!Game.AutoMode || MusicFile != Game.MusicFile) {
 				Game.MusicFile = MusicFile;
 				Game.Audio.src = (SongList[Number.parseInt(GetElm("song").getAttribute("song"))].Folder + "/" + MusicFile);
 				Game.Audio.currentTime = 0;
@@ -263,10 +263,16 @@ var Game = {
 			Game.FinishTime = Infinity;
 			NodeText.split(" ").forEach((word) => {
 				var tmp = word.split(":").map(v => Number.parseInt(v));
-				if (tmp.length == 1) {
-					Game.FinishTime = tmp[0];
-				} else {
-					Game.Lines[tmp[0]].Nodes.push({ Time: tmp.slice(1), _: { Pressed: false } });
+				switch (tmp.length) {
+					case 1:
+						Game.FinishTime = tmp[0];
+						break;
+					case 2:
+						Game.Lines[tmp[0]].Nodes.push({ Time: tmp.slice(1), _: { Pressed: false } });
+						break;
+					case 3:
+						Game.Lines[tmp[0]].Nodes.push({ Time: tmp.slice(1), _: { Pressed: false, KeyDowned: false } });
+						break;
 				}
 			});
 			NodeText = "";
@@ -279,16 +285,16 @@ var Game = {
 			Game.Tick();
 		});
 	}, Tick: () => {
-		if (Game.Audio.currentTime*1000 > Game.FinishTime) {
+		if (Game.Audio.currentTime * 1000 > Game.FinishTime) {
 			Game.OnFin();
 			return;
 		}
-		var now = Game.Audio.currentTime*1000;
+		var now = Game.Audio.currentTime * 1000;
 		Game.Draw.ctx.clearRect(0, 0, Game.Draw.Scalex, Game.Draw.Scaley);
 		Game.Lines.forEach((line, i) => {
 			line.Light *= 0.95;
 			line.Color *= 0.95;
-			var Color = `hsl(${line.Color * 60 + 60},${line.Light * 80 + 20}%,${Math.min(0.4,line.Light) * 25 + 50}%)`;
+			var Color = `hsl(${line.Color * 60 + 60},${line.Light * 80 + 20}%,${Math.min(0.4, line.Light) * 25 + 50}%)`;
 			var ColorOfNode = `hsla(${line.Color * 60 + 60},${line.Light * 80 + 20}%,${Math.min(0.4, line.Light) * 25 + 50}%,0.5)`;
 			var Linex = 1 / Game.Lines.length * (i + 0.5);
 			var Ry = Game._.Radius / Game.Lines.length * (Game.Draw.Scalex > Game.Draw.Scaley ? 1 : Game.Draw.Scalex / Game.Draw.Scaley);
@@ -320,7 +326,7 @@ var Game = {
 						var y2 = Math.pow(1 - ((node.Time[1] - now) / Game.Speed), 5) * (Game._.BorderY + Ry) - Ry;//大きい
 						if (y1 < -Ry) return Game.MakingMode;
 						if (y2 > 1 + Ry) return false;
-						if (y1 > Game._.BorderY && Game.AutoMode)
+						if (y2 > Game._.BorderY && Game.AutoMode)
 							node._.Pressed = true;
 						Game.Draw.Path(() => {
 							Game.Draw.LongRound(Linex, y2, y1 - y2, Game._.Radius / Game.Lines.length);
@@ -338,7 +344,7 @@ var Game = {
 		requestAnimationFrame(Game.Tick);
 	}, OnKey: (isUp, Key, Other) => {
 		if (Game.AutoMode) return;
-		var now = Game.Audio.currentTime*1000;
+		var now = Game.Audio.currentTime * 1000;
 		if (Game.MakingMode && !isUp) {
 			switch (Key) {
 				case 13: //Enter: Finish
@@ -391,24 +397,22 @@ var Game = {
 				}
 				var This = { ID: -1, Timespan: Infinity };//Timespan: now-node[0]
 				Game.Lines[i].Nodes.forEach((node, i) => {
-					var span = 0;
+					var span = Infinity;
 					switch (node.Time.length) {
 						case 1:
-							span = now - node.Time[0];
-							break;
-						case 2:
-							if (node.Time[0] < now)
-								if (now < node.Time[1])
-									span = 0;
-								else
-									span = now - node.Time[1];
-							else
+							if (!isUp && !node._.Pressed)
 								span = now - node.Time[0];
 							break;
+						case 2:
+							if (isUp && node._.KeyDowned) {
+								span = now - node.Time[1];
+							} else if (!isUp && !node._.KeyDowned) {
+								span = now - node.Time[0];
+							}
+							break;
 					}
-					if (Math.abs(span) < Math.abs(This.Timespan)) {
+					if (Math.abs(span) < Math.abs(This.Timespan))
 						This = { ID: i, Timespan: span };
-					}
 				});
 
 				if (Game.MakingMode) {
@@ -417,14 +421,15 @@ var Game = {
 					if (This.ID >= 0 && Math.abs(This.Timespan) < Game._.LimitGOSA) {
 						switch (Game.Lines[i].Nodes[This.ID].Time.length) {
 							case 1:
-								if (isUp) return;
-							case 2:	
-								//TODO Longnode	
+								Game.Lines[i].Nodes[This.ID]._.Pressed = true;
+							case 2:
+								if (isUp)
+									Game.Lines[i].Nodes[This.ID]._.Pressed = true;
+								else
+									Game.Lines[i].Nodes[This.ID]._.KeyDowned = true;
 						}
-							
 						Game.Lines[i].Color = Math.sign(This.Timespan) * (Math.max(Math.abs(This.Timespan), Game._.MaxScoreLimitGOSA) - Game._.MaxScoreLimitGOSA) / (Game._.LimitGOSA - Game._.MaxScoreLimitGOSA);
 						Game.Lines[i].Light = 1;
-						Game.Lines[i].Nodes[This.ID]._.Pressed = true;
 						Game.Combo = Math.min(Game.Combo + 1, 5);
 						Game.Score += (Game.Combo / Math.pow((
 							Math.max(Math.abs(This.Timespan), Game._.MaxScoreLimitGOSA) - Game._.MaxScoreLimitGOSA) / (Game._.LimitGOSA - Game._.MaxScoreLimitGOSA) //0:Good ~ 1:Bad
@@ -447,7 +452,7 @@ var Game = {
 		//Game.Audio.loop = true;
 		Game.Draw = new Drawing(GetElm("c1"), GetElm("game"));
 
-		Game_Keyboard_.Pressed = [];		
+		Game_Keyboard_.Pressed = [];
 		Game._.Keys.forEach((v) => Game_Keyboard_.Pressed[v] = false);
 		document.onkeydown = (e) => {
 			if (!e) e = window.event;
@@ -463,7 +468,7 @@ var Game = {
 		}
 	}//Document.onload
 }
-var Game_Keyboard_={
+var Game_Keyboard_ = {
 	Pressed: {}
 };
 var UI = {
