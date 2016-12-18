@@ -16,7 +16,11 @@ function Onload() {
 		}
 	});
 	GetElm("name").addEventListener("click", () => {
-		GetElm("name").innerText = prompt("name...") || "";
+		var A = prompt("name...");
+		if (A != null) {
+			AddRanking();
+			GetElm("name").innerText = A + " Ranking added!";
+		}
 	});
 	Util.LoadScript("songs.js", () => {
 		ReflushTagList();
@@ -121,7 +125,6 @@ function ShowGame() {
 	UI.DeActiveBtn(GetElm("next"));
 	function CountingAndStart() {
 		Count++;
-		console.log(Count);
 		if (Count == 3) {
 			StartGame();
 			GetElm("prev").addEventListener("click", function listener() {
@@ -156,9 +159,14 @@ function ShowFin() {
 		GetElm("prev").removeEventListener("click", listener);
 		ShowMenu();
 	});
-	//TODO: Ranking
+	ReflushRanking();
 }
-
+function ReflushRanking() {
+	//TODO
+}
+function AddRanking() {
+	//TODO
+}
 class Drawing {
 	constructor(canvas, parent) {
 		this.Parent = parent;
@@ -167,7 +175,7 @@ class Drawing {
 		this.Scalex = 1;
 		this.Scaley = 1;
 		var This = this;
-		(function (Fn) {
+		((Fn) => {
 			var i;
 			window.addEventListener('resize', () => {
 				if (i !== false) { clearTimeout(i); }
@@ -232,7 +240,7 @@ class Drawing {
 	}
 }
 var Game = {
-	_: { Keys: [83, 68, 70, 32, 74, 75, 76], ReadyTime: 1000, BorderY: 0.8, Radius: 1 / 2, MaxScoreLimitGOSA: 50, LimitGOSA: 100, MistakeScore: -100 },
+	_: { Keys: [83, 68, 70, 32, 74, 75, 76], MakingLongKeys: [87, 69, 82, 66, 85, 73, 79], ReadyTime: 1000, BorderY: 0.8, Radius: 1 / 2, MaxScoreLimitGOSA: 50, LimitGOSA: 100, MistakeScore: -100 },
 	Audio: new Audio(),//Overwritten by Init
 	Draw: undefined,//Overwritten by Game.OnLoad
 	Lines: [{ Color: 0, Light: 0, Nodes: [{ Time: [], _: { Pressed: false } }] }],//Overwritten by Init Time.len==3=> _.KeyDowned:false/true
@@ -250,14 +258,11 @@ var Game = {
 		Game.Lines = [];
 		Game._.Keys.forEach(v => Game.Lines.push({ Color: 0, Light: 0, Nodes: [] }));
 		Util.LoadScript(SongList[Number.parseInt(GetElm("song").getAttribute("song"))].Folder + "/setting.js", () => {
-			console.log(SongList[Number.parseInt(GetElm("song").getAttribute("song"))].Folder + "/" + MusicFile);
-			console.log(Game.MusicFile);
 			if (!Game.AutoMode || MusicFile != Game.MusicFile) {
 				Game.MusicFile = MusicFile;
 				Game.Audio.src = (SongList[Number.parseInt(GetElm("song").getAttribute("song"))].Folder + "/" + MusicFile);
 				Game.Audio.currentTime = 0;
 			}
-			Game.Audio.preload = "auto";
 			Game.Score = 0;
 			Game.Combo = 0;
 			Game.FinishTime = Infinity;
@@ -277,10 +282,6 @@ var Game = {
 			});
 			NodeText = "";
 			Game.Lines.forEach((line) => { line.Nodes = line.Nodes.sort((a, b) => a.Time[0] - b.Time[0]); });
-			Game.Audio.onended = () => {
-				console.log("Fin");
-				Game.OnFin();
-			};
 			Game.Audio.play();
 			Game.Tick();
 		});
@@ -343,6 +344,7 @@ var Game = {
 		});
 		requestAnimationFrame(Game.Tick);
 	}, OnKey: (isUp, Key, Other) => {
+		//TODO:Making-Assist
 		if (Game.AutoMode) return;
 		var now = Game.Audio.currentTime * 1000;
 		if (Game.MakingMode && !isUp) {
@@ -386,12 +388,12 @@ var Game = {
 			Game.Audio.play();
 			return;
 		}
-		if (!Game.Audio.played) return;
-		Game._.Keys.some(function (key, i) {
+		if (!Game.MakingMode && !Game.Audio.played) return;
+		Game._.Keys.some((key, i) => {
 			if (key == Key) {
 				if (Game.MakingMode && !Other.Shift) {
 					if (!isUp) {
-						Game.Lines[i].Nodes.push({ Time: [now << 0], _: { Pressed: false } });//TODO: Add Long node
+						Game.Lines[i].Nodes.push({ Time: [now << 0], _: { Pressed: false } });
 					}
 					return true;
 				}
@@ -435,7 +437,7 @@ var Game = {
 							Math.max(Math.abs(This.Timespan), Game._.MaxScoreLimitGOSA) - Game._.MaxScoreLimitGOSA) / (Game._.LimitGOSA - Game._.MaxScoreLimitGOSA) //0:Good ~ 1:Bad
 							* 0.9 + 0.1 //.1:Good ~ 1:Bad
 							, 2) * 5.1 + 490) << 0;//1000*Combo:Good ~ 500*Combo:Bad
-					} else {
+					} else if (!isUp) {
 						Game.Combo = 0;
 						Game.Score += Game._.MistakeScore;
 					}
@@ -444,33 +446,56 @@ var Game = {
 			}
 			return false;
 		});
+		if (Game.MakingMode) {
+			Game._.MakingLongKeys.some((key, i) => {
+				if (key == Key) {
+					if (!isUp) {
+						Game.Lines[i].Nodes.push({ Time: [now << 0, (Game.Audio.duration * 1000) << 0], _: { Pressed: false,KeyDowned:false } });
+						Game_Onkey_MakingLong[i] = Game.Lines[i].Nodes.length - 1;
+					} else {
+						Game.Lines[i].Nodes[Game_Onkey_MakingLong[i]].Time[1] = now << 0;
+					}
+				}
+			});
+		}
 	}, OnFin: () => {
-		if (!Game.AutoMode)
+		if (!Game.AutoMode) {
+			Game.AutoMode = true;
 			ShowFin();
+		} else {
+			Game.Init();
+		}
 	}, OnLoad: () => {
 		Game.Audio = new Audio();
+		Game.Audio.preload = "auto";
+		Game.Audio.onended = () => {
+			Game.Audio.currentTime = 0;
+			Game.OnFin();
+		};
 		//Game.Audio.loop = true;
 		Game.Draw = new Drawing(GetElm("c1"), GetElm("game"));
 
 		Game_Keyboard_.Pressed = [];
+		Game_Onkey_MakingLong = new Array(Game._.MakingLongKeys.length);
 		Game._.Keys.forEach((v) => Game_Keyboard_.Pressed[v] = false);
 		document.onkeydown = (e) => {
 			if (!e) e = window.event;
 			if (Game_Keyboard_[e.keyCode]) return;
 			Game_Keyboard_[e.keyCode] = true;
-			Game.OnKey(false, e.keyCode, { Shift: e.shiftKey, Ctrl: e.ctrlKey });
+			Game.OnKey(false, e.keyCode, { Shift: e.shiftKey, });
 		}
 		document.onkeyup = (e) => {
 			if (!e) e = window.event;
 			if (!Game_Keyboard_[e.keyCode]) return;
 			Game_Keyboard_[e.keyCode] = false;
-			Game.OnKey(true, e.keyCode, { Shift: e.shiftKey, Ctrl: e.ctrlKey });
+			Game.OnKey(true, e.keyCode, { Shift: e.shiftKey});
 		}
 	}//Document.onload
 }
 var Game_Keyboard_ = {
 	Pressed: {}
 };
+var Game_Onkey_MakingLong = [];
 var UI = {
 	DOMs: {
 		Title: undefined
@@ -542,7 +567,7 @@ var Util = {
 		let script = document.createElement('script');
 		script.src = src;
 		head.appendChild(script);
-		script.onload = script.onreadystatechange = function () {
+		script.onload = script.onreadystatechange = () => {
 			if (!done && (!script.readyState || script.readyState === "loaded" || script.readyState === "complete")) {
 				done = true;
 				callback();
@@ -556,20 +581,20 @@ var Util = {
 	, URLtoObject: () => {
 		let arg = {};
 		let pair = location.search.substring(1).split('&');
-		pair.forEach(function (V) {
+		pair.forEach((V) => {
 			let kv = V.split('=');
 			arg[kv[0]] = kv[1];
 		});
 		return arg;
 	}, Polyfill: () => {
 		window.performance = window.performance || {};
-		window.performance.now = window.performance.now || function () { return new Date().getTime(); };
+		window.performance.now = window.performance.now || (() => new Date().getTime());
 
 		var timer = null;
-		window.requestAnimationFrame = window.requestAnimationFrame || function (callback) {
+		window.requestAnimationFrame = window.requestAnimationFrame || ((callback) => {
 			clearTimeout(timer);
 			setTimeout(callback, 1000 / 60);
-		};
+		});
 	}
 }
 Util.Polyfill();
