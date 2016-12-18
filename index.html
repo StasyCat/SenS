@@ -74,10 +74,12 @@
 			margin-right: 0.5em;
 		}
 		.rank{
+			margin-right: 1em;
 			flex-basis: 3em;
 			flex-shrink: 1;
 		}
 		.score{
+			margin-right: 1em;
 			flex-basis: 5em;
 			flex-shrink: 1;
 		}
@@ -138,7 +140,7 @@
 		.activebtn,#gameback{
 			user-select: none;
 		}
-		#song,#speed,#name,#songlist>* {
+		#song,#speed,#name,#songlist>*,.activebtn {
 			animation: active-btn 0.75s ease-in-out alternate infinite backwards;
 			cursor: pointer;
 			user-select: none;
@@ -150,8 +152,8 @@
 		}
 		.selbtn{
 			animation: selected-btn 0.75s ease-in-out alternate infinite backwards !important;
-			cursor: default;
-			user-select: pointer;
+			cursor: pointer;
+			user-select: none;
 		}
 		.unselbtn,#tags>* {
 			animation: unselected-btn 1s ease-in-out alternate infinite backwards;

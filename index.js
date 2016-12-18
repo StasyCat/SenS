@@ -16,15 +16,14 @@ function Onload() {
 		}
 	});
 	GetElm("name").addEventListener("click", () => {
-		if (GetElm("name").setAttribute("can") != "_") {
+		if (GetElm("name").getAttribute("can") != "_") {
 			alert("もう追加済みですので追加できないんですよ。まあ、許してやってください");
 			return;
 		}
 		var A = prompt("ランキングへ名前とともに登録できます...");
 		if (A != null) {
-			GetElm("name").setAttribute("can") == "#";
+			GetElm("name").setAttribute("can", "#");
 			AddRanking(A);
-			GetElm("name").innerText = A + " Added!";
 		}
 	});
 	Util.LoadScript("songs.js", () => {
@@ -153,6 +152,9 @@ function ReflushPreview() {
 
 
 function ShowFin() {
+	GetElm("name").setAttribute("can", "_");
+
+	GetElm("name").innerText = "Enter your name...";
 	UI.ChangeTitle("Result " + Game.Score + "pt");
 	UI.Fadeout(GetElm("menu"));
 	UI.Fadeout(GetElm("game"));
@@ -166,21 +168,37 @@ function ShowFin() {
 	});
 	ReflushRanking();
 }
+var RankingDatas = [];
 function ReflushRanking() {
 	var DOM = GetElm("rankinglist");
 	DOM.innerHTML = "";
 	MyStorage.Get(SongList[Number.parseInt(GetElm("song").getAttribute("song"))].Folder, (datas) => {
-		datas.sort((a,b)=>a.Pt-b.Pt).forEach((data,i) => {
+		RankingDatas = datas.sort((a, b) => a.p - b.p);
+		RankingDatas.forEach((data, i) => {
 			var LI = document.createElement("li");
-			LI.innerHTML = `<span class="rank">#${i+1}</span><span class="score">${data.Pt}pt</span><span class="name">${data.Name}</span>`;
+			LI.innerHTML = `<span class="rank">#${i + 1}</span><span class="score">${data.p}pt</span><span class="name">${data.n}</span>`;
 			DOM.appendChild(LI)
 		});
 	});
 }
 function AddRanking(A) {
 	MyStorage.Add(SongList[Number.parseInt(GetElm("song").getAttribute("song"))].Folder, {
-		pt: Game.Score,
-		Name: A
+		p: Game.Score,
+		n: A
+	}, () => {
+		GetElm("name").innerText = A + " Added!"
+		RankingDatas.push({
+			p: Game.Score,
+			n: A
+		});
+		RankingDatas = RankingDatas.sort((a, b) => a.p - b.p);
+		var DOM = GetElm("rankinglist");
+		DOM.innerHTML = "";
+		RankingDatas.forEach((data, i) => {
+			var LI = document.createElement("li");
+			LI.innerHTML = `<span class="rank">#${i + 1}</span><span class="score">${data.p}pt</span><span class="name">${data.n}</span>`;
+			DOM.appendChild(LI)
+		});
 	});
 }
 class Drawing {
@@ -270,6 +288,8 @@ var Game = {
 	get Score() { return this._score; },
 	Combo: 0,//Overwritten by Init
 	Init: () => {
+		Game.Nodes = undefined;
+		Game.Lines = undefined;
 		Game.Nodes = [];
 		Game.Lines = [];
 		Game._.Keys.forEach(() => Game.Lines.push({ Color: 0, Light: 0, Nodes: [] }));
@@ -670,18 +690,20 @@ var Util = {
 	}
 }
 var MyStorage = {
-	Get: function (FolderName,Fn) {
+	Get: function (FolderName, Fn) {
 		if (!localStorage[FolderName])
-			localStorage[FolderName]= [];
-		Fn(localStorage.getItem[FolderName]);
+			Fn([]);
+		else
+			Fn(JSON.parse(localStorage.getItem(FolderName)));
 	}, Add: function (FolderName, Data, Fn) {
-		if (!localStorage[FolderName])
-			localStorage[FolderName] = [];
-		else {
-			var Prev = localStorage[FolderName];
-			Prev.push(Data);
-			localStorage[FolderName] = Prev;
+		var Prev = [];
+		try {
+			Prev = JSON.parse(localStorage.getItem(FolderName));
+		} catch (e){
+			Prev = [];
 		}
+		Prev.push(Data);
+		localStorage.setItem(FolderName, JSON.stringify(Prev));
 		Fn();
 	}
 };
