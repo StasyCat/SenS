@@ -329,6 +329,7 @@ var Game = {
 		}
 		var now = Game.Audio.currentTime * 1000;
 		Game.Draw.ctx.clearRect(0, 0, Game.Draw.Scalex, Game.Draw.Scaley);
+		Game.Draw.ctx.globalCompositeOperation = "lighter";
 		Game.Lines.forEach((line, i) => {
 			line.Light *= 0.95;
 			line.Color *= 0.95;
@@ -337,12 +338,10 @@ var Game = {
 			var Linex = 1 / Game.Lines.length * (i + 0.5);
 			var Ry = Game._.Radius / Game.Lines.length * (Game.Draw.Scalex > Game.Draw.Scaley ? 1 : Game.Draw.Scalex / Game.Draw.Scaley);
 			Game.Draw.Path(() => {
-				Game.Draw.Line(Linex, 0, Linex, Game._.BorderY - Ry);
+				/*Game.Draw.Line(Linex, 0, Linex, Game._.BorderY - Ry);*/
 				Game.Draw.Round(Linex, Game._.BorderY, Game._.Radius / Game.Lines.length);
 				return { Stroke: Color };
 			});
-
-			Game.Draw.ctx.globalCompositeOperation = "lighter";
 			line.Nodes.some((node) => {
 				switch (node.Time.length) {
 					case 1:
@@ -375,10 +374,10 @@ var Game = {
 						});
 						break;
 				}
-				Game.Draw.ctx.globalCompositeOperation = "source-over";
 				return false;
-			})
+			});
 		});
+		Game.Draw.ctx.globalCompositeOperation = "source-over";
 		requestAnimationFrame(Game.Tick);
 	}, OnKey: (isUp, Key, Other) => {
 		if (Game.AutoMode) return;
@@ -571,8 +570,6 @@ var Game = {
 				}
 		}
 		Game.Draw.ctx.canvas.addEventListener('touchstart', function (e) {
-			console.log(e.touches.item(0).clientX);
-			console.log(Game.Draw.Scalex);
 			if (!e) e = window.event;
 			for (let i = 0; i < e.touches.length; i++)
 				Game.OnKey(false, Game._.Keys[(e.touches.item(i).clientX / (Game.Draw.Parent.clientWidth / Game._.Keys.length)) << 0], { Shift: false, Ctrl: false });
