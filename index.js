@@ -16,10 +16,15 @@ function Onload() {
 		}
 	});
 	GetElm("name").addEventListener("click", () => {
-		var A = prompt("name...");
+		if (GetElm("name").setAttribute("can") != "_") {
+			alert("もう追加済みですので追加できないんですよ。まあ、許してやってください");
+			return;
+		}
+		var A = prompt("ランキングへ名前とともに登録できます...");
 		if (A != null) {
-			AddRanking();
-			GetElm("name").innerText = A + " Ranking added!";
+			GetElm("name").setAttribute("can") == "#";
+			AddRanking(A);
+			GetElm("name").innerText = A + " Added!";
 		}
 	});
 	Util.LoadScript("songs.js", () => {
@@ -162,10 +167,21 @@ function ShowFin() {
 	ReflushRanking();
 }
 function ReflushRanking() {
-	//TODO
+	var DOM = GetElm("rankinglist");
+	DOM.innerHTML = "";
+	MyStorage.Get(SongList[Number.parseInt(GetElm("song").getAttribute("song"))].Folder, (datas) => {
+		datas.sort((a,b)=>a.Pt-b.Pt).forEach((data,i) => {
+			var LI = document.createElement("li");
+			LI.innerHTML = `<span class="rank">#${i+1}</span><span class="score">${data.Pt}pt</span><span class="name">${data.Name}</span>`;
+			DOM.appendChild(LI)
+		});
+	});
 }
-function AddRanking() {
-	//TODO
+function AddRanking(A) {
+	MyStorage.Add(SongList[Number.parseInt(GetElm("song").getAttribute("song"))].Folder, {
+		pt: Game.Score,
+		Name: A
+	});
 }
 class Drawing {
 	constructor(canvas, parent) {
@@ -653,6 +669,23 @@ var Util = {
 		});
 	}
 }
+var MyStorage = {
+	Get: function (FolderName,Fn) {
+		if (!localStorage[FolderName])
+			localStorage[FolderName]= [];
+		Fn(localStorage.getItem[FolderName]);
+	}, Add: function (FolderName, Data, Fn) {
+		if (!localStorage[FolderName])
+			localStorage[FolderName] = [];
+		else {
+			var Prev = localStorage[FolderName];
+			Prev.push(Data);
+			localStorage[FolderName] = Prev;
+		}
+		Fn();
+	}
+};
+
 Util.Polyfill();
 window.addEventListener("load", () => {
 	UI.Onload();
