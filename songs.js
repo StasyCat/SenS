@@ -12,6 +12,12 @@ var SongList = [
 		Detail: ""
 	},
 	{
+		Title: "ロストワンの号哭 Lv.8",
+		Level: 8,
+		File: "LostOne-8",
+		Detail: ""
+	},
+	{
 		Title: "夜咄ディセイブ Lv.6",
 		Level: 6,
 		File: "Yobanashi-6",
@@ -28,5 +34,5 @@ var SongList = [
 		Level: 7,
 		File: "Science-7",
 		Detail: ""
-	},
+	}
 ];
