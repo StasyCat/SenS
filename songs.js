@@ -20,7 +20,7 @@ var SongList = [
 	{
 		Title: "RPG Lv.4",
 		Level: 4,
-		File: "LostOne-4",
+		File: "RPG-8",
 		Detail: ""
 	},
 	{

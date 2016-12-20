@@ -5,7 +5,7 @@
 	<title>SenS!</title>
 	<meta charset="UTF-8">
 	<meta name="description" content="いわゆる音ゲーです">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="viewport" content="width=device-width, initial-scale=1,minimum-scale=1.0, maximum-scale=1.0,user-scalable=no">
 	<meta name="author" content="Masaya Kai">
 	<link href="https://fonts.googleapis.com/earlyaccess/notosansjapanese.css" id="gwebfont1" />
 	<link href="https://fonts.googleapis.com/css?family=Open+Sans|Open+Sans+Condensed:300|Quicksand:300|Raleway:200" id="gwebfont2"
@@ -175,7 +175,7 @@
 			user-select: none;
 		}
 		.fading1 {
-			animation: fading 0.75s ease-in-out normal forwards;
+			animation: fading 0.5s ease-in-out normal forwards;
 		}
 		.fading2 {
 			opacity: 0;
@@ -215,7 +215,7 @@
 <script src="index.js"></script>
 </head>
 
-<body onload="document.getElementById('gwebfont1').rel='stylesheet';document.getElementById('gwebfont2').rel='stylesheet';">
+<body  oncontextmenu="return false" touchmove="function(e){e.preventDefault();}" onload="document.getElementById('gwebfont1').rel='stylesheet';document.getElementById('gwebfont2').rel='stylesheet';">
 <div class="fullH fullW cV">
 	<div class="fullW cH" id="head">
 		<span class="fullH deactivebtn" id="prev">&lt;</span>

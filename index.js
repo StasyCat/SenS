@@ -4,7 +4,8 @@
 function GetElm(id) { return document.getElementById(id); }
 function Onload() {
 	GetElm("song").addEventListener("click", () => {
-		UI.Fadeout(GetElm("detail"), () => UI.Fadein(GetElm("selectsong")));
+		UI.Fadeout(GetElm("detail"));
+		UI.Fadein(GetElm("selectsong"));
 		ReflushSongList();
 	});
 	GetElm("speed").addEventListener("click", () => {
@@ -36,12 +37,11 @@ function Onload() {
 	}, 500);
 }
 function ShowMenu() {
-	UI.ChangeTitle("Song/Speed", () => UI.Fadeout(GetElm("fin")));
+	UI.ChangeTitle("Song/Speed");
 	UI.Fadein(GetElm("menu"));
 	UI.Fadein(GetElm("game"));
 	UI.Fadeout(GetElm("gameback"));
 	UI.Fadeout(GetElm("fin"));
-	UI.Fadein(GetElm("selectsong"), () => UI.Fadeout(GetElm("detail")));
 	UI.DeActiveBtn(GetElm("prev"));
 	UI.DeActiveBtn(GetElm("next"));
 	UI.UnBlink(GetElm("next"));
@@ -108,7 +108,8 @@ function ReflushSongList() {
 			GetElm("song").setAttribute("song", i);
 			DetailReflushWithSong();
 			VerifyMenu();
-			UI.Fadeout(GetElm("selectsong"), () => UI.Fadein(GetElm("detail")));
+			UI.Fadeout(GetElm("selectsong"));
+			UI.Fadein(GetElm("detail"));
 		});
 		GetElm("songlist").appendChild(LI)
 	}
@@ -298,7 +299,7 @@ var Game = {
 		Util.LoadScript("datas/"+SongList[Number.parseInt(GetElm("song").getAttribute("song"))].File + ".js", () => {
 			if (!Game.AutoMode || MusicFile != Game.MusicFile) {
 				Game.MusicFile = MusicFile;
-				Game.Audio.src = ("music/" + MusicFile);
+				Game.Audio.src = ("musics/" + MusicFile);
 			}
 			Game.Audio.currentTime = 0;
 			Game.Score = 0;
@@ -734,4 +735,7 @@ window.addEventListener("load", () => {
 	UI.Onload();
 	Game.OnLoad();
 	Onload();
+	
+	UI.Fadein(GetElm("selectsong"));
+	UI.Fadeout(GetElm("detail"));
 });
