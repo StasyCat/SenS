@@ -42,7 +42,7 @@ function Onload() {
 	});
 	Game.PlaySE=GetElm("se").classList.contains("selbtn");
 	Util.LoadScript("songs.js", () => {
-		SongList=SongList.sort((a,b)=>a.Title<b.Title?-1:a.Title>b.Title?1:0);
+		window["SongList"]=window["SongList"].sort((a,b)=>a["Title"]<b["Title"]?-1:a["Title"]>b["Title"]?1:0);
 		ReflushSongList();
 		ReflushTagList();
 	});
@@ -76,12 +76,11 @@ function VerifyMenu() {
 		UI.DeActiveBtn(GetElm("next"));
 	}
 }
-var SongList = [{ Title: "", File: "", Level: 0, Detail: "" }];
 function ReflushTagList() {
 	GetElm("tags").innerHTML = "";
 	var Tags = {};
-	SongList.forEach((v) => {
-		Tags[v.Level] = 1;
+	window["SongList"].forEach((v) => {
+		Tags[v["Level"]] = 1;
 	});
 	Object.keys(Tags).forEach((v) => {
 		var LI = document.createElement("li");
@@ -107,18 +106,18 @@ function ReflushSongList() {
 	}
 	GetElm("songlist").innerHTML = "";
 	if (ActiveTags.length == 0)
-		SongList.forEach(AddToDOM);
+		window["SongList"].forEach(AddToDOM);
 	else
-		SongList.forEach((v, i) => {
-			if (ActiveTags.some(w => w == v.Level))
+		window["SongList"].forEach((v, i) => {
+			if (ActiveTags.some(w => w == v["Level"]))
 				AddToDOM(v, i);
 		});
 
 	function AddToDOM(v, i) {
 		var LI = document.createElement("li");
-		LI.innerText = v.Title;
+		LI.innerText = v["Title"];
 		LI.addEventListener("click", () => {
-			GetElm("song").innerText = v.Title;
+			GetElm("song").innerText = v["Title"];
 			GetElm("song").setAttribute("song", i);
 			DetailReflushWithSong();
 			VerifyMenu();
@@ -129,7 +128,7 @@ function ReflushSongList() {
 	}
 }
 function DetailReflushWithSong() {
-	GetElm("detailtext").innerText = "縦に7本レーンがありまして、左から順に、[S] [D] [F] [Space] [J] [K] [L] のキーを押して、落ちてくる譜面を叩いてください。\n\n曲へのコメント\n" + SongList[Number.parseInt(GetElm("song").getAttribute("song"))].Detail;
+	GetElm("detailtext").innerText = "縦に7本レーンがありまして、左から順に、[S] [D] [F] [Space] [J] [K] [L] のキーを押して、落ちてくる譜面を叩いてください。\n\n曲へのコメント\n" + window["SongList"][Number.parseInt(GetElm("song").getAttribute("song"),10)]["Detail"];
 }
 function ShowGame() {
 	var Count = 0;
@@ -188,7 +187,7 @@ var RankingDatas = [];
 function ReflushRanking() {
 	var DOM = GetElm("rankinglist");
 	DOM.innerHTML = "";
-	MyStorage.Get(SongList[Number.parseInt(GetElm("song").getAttribute("song"))].File, (datas) => {
+	MyStorage.Get(window["SongList"][Number.parseInt(GetElm("song").getAttribute("song"),10)]["File"], (datas) => {
 		RankingDatas = datas.sort((a, b) => a.p - b.p);
 		RankingDatas.forEach((data, i) => {
 			var LI = document.createElement("li");
@@ -198,7 +197,7 @@ function ReflushRanking() {
 	});
 }
 function AddRanking(A) {
-	MyStorage.Add(SongList[Number.parseInt(GetElm("song").getAttribute("song"))].File, {
+	MyStorage.Add(window["SongList"][Number.parseInt(GetElm("song").getAttribute("song"),10)]["File"], {
 		p: Game.Score,
 		n: A
 	}, () => {
@@ -226,16 +225,13 @@ class Drawing {
 		this.Scaley = 1;
 		var This = this;
 		((Fn) => {
-			var i;
+			var i=false;
 			window.addEventListener('resize', () => {
 				if (i !== false) { clearTimeout(i); }
 				i = setTimeout(Fn, 100);
 			});
 		})(() => this.OnResize.call(This));
 		this.OnResize();
-	}
-	static Color(r, g, b) {
-		'rgb(' + (r << 0) + ',' + (g << 0) + ',' + (b << 0) + ')'
 	}
 	OnResize() {
 		let Canvas = this.ctx.canvas;
@@ -283,7 +279,7 @@ class Drawing {
 		let Tmp = this.ctx.fillStyle;
 		let Tmp2 = this.ctx.globalCompositeOperation;
 		this.ctx.fillStyle = Style;
-		this.ctx.globalCompositeOperation = Util.OptArg(globalCompositeOperation, 'source-over');
+		this.ctx.globalCompositeOperation = globalCompositeOperation|| 'source-over';
 		this.ctx.fillRect(0, 0, this.Scalex << 0, this.Scaley << 0);
 		this.ctx.fillStyle = Tmp;
 		this.ctx.globalCompositeOperation = Tmp2;
@@ -302,10 +298,8 @@ var Game = {
 	MusicFile: "",//Overwritten by Init( プレビューへゲームから行くときに音楽が途切れないように)
 	FinishTime: 0,//Overwritten by Init
 	Speed: 5000,/////Overwritten by ReflushPreview
-	_score: 0,//Overwritten by Init
+	Score: 0,//Overwritten by Init
 	Tickings:0,
-	set Score(x) { this._score = x; GetElm("score").innerText = this._score; },
-	get Score() { return this._score; },
 	Combo: 0,//Overwritten by Init
 	Init: () => {
 		Game.Nodes = undefined;
@@ -313,18 +307,19 @@ var Game = {
 		Game.Nodes = [];
 		Game.Lines = [];
 		Game._.Keys.forEach(() => Game.Lines.push({ Color: 0, Light: 0, Nodes: [] }));
-		Util.LoadScript("datas/"+SongList[Number.parseInt(GetElm("song").getAttribute("song"))].File + ".js", () => {
-			if (!Game.AutoMode || MusicFile != Game.MusicFile) {
-				Game.MusicFile = MusicFile;
-				Game.Audio.src = ("musics/" + MusicFile);
+		Util.LoadScript("datas/"+window["SongList"][Number.parseInt(GetElm("song").getAttribute("song"),10)]["File"] + ".js", () => {
+			if (!Game.AutoMode || window["MusicFile"] != Game.MusicFile) {
+				Game.MusicFile = window["MusicFile"];
+				Game.Audio.src = ("musics/" + window["MusicFile"]);
 			}
 			Game.Audio.currentTime = 0;
 			Game.Audio.playbackRate = 1;
 			Game.Score = 0;
+			Game.UpdateScore();
 			Game.Combo = 0;
 			Game.FinishTime = Infinity;
-			NodeText.split(" ").forEach((word) => {
-				var tmp = word.split(":").map(v => Number.parseInt(v));
+			window["NodeText"].split(" ").forEach((word) => {
+				var tmp = word.split(":").map(v => Number.parseInt(v,10));
 				switch (tmp.length) {
 					case 1:
 						if (!Game.MakingMode)
@@ -338,7 +333,7 @@ var Game = {
 						break;
 				}
 			});
-			NodeText = "";
+			window["NodeText"] = "";
 			Game.Lines.forEach((line) => { line.Nodes = line.Nodes.sort((a, b) => a.Time[0] - b.Time[0]); });
 			Game.Audio.play();
 			if (Game.Tickings == 0) {
@@ -369,7 +364,7 @@ var Game = {
 			Game.Draw.Path(() => {
 				if (i * 2 == Game._.Keys.length - 1) Game.Draw.Line(Linex, 0, Linex, Game._.BorderY - Ry);
 				Game.Draw.Round(Linex, Game._.BorderY, Game._.Radius / Game.Lines.length);
-				return { Stroke: Color };
+				return { "Stroke": Color };
 			});
 			line.Nodes.some((node) => {
 				switch (node.Time.length) {
@@ -385,9 +380,9 @@ var Game = {
 						Game.Draw.Path(() => {
 							Game.Draw.Round(Linex, y, Game._.Radius / Game.Lines.length);
 							if (node._.Pressed)
-								return { Stroke: ColorOfNode };
+								return { "Stroke": ColorOfNode };
 							else
-								return { Fill: ColorOfNode };
+								return { "Fill": ColorOfNode };
 						});
 						break;
 					case 2:
@@ -403,9 +398,9 @@ var Game = {
 						Game.Draw.Path(() => {
 							Game.Draw.LongRound(Linex, y2, y1 - y2, Game._.Radius / Game.Lines.length);
 							if (node._.Pressed)
-								return { Stroke: ColorOfNode };
+								return { "Stroke": ColorOfNode };
 							else
-								return { Fill: ColorOfNode };
+								return { "Fill": ColorOfNode };
 						});
 						break;
 				}
@@ -487,6 +482,7 @@ var Game = {
 								Math.max(Math.abs(This.Timespan), Game._.MaxScoreLimitGOSA) - Game._.MaxScoreLimitGOSA) / (Game._.LimitGOSA - Game._.MaxScoreLimitGOSA) //0:Good ~ 1:Bad
 								* 0.9 + 0.1 //.1:Good ~ 1:Bad
 								, 2) * 5.1 + 490) << 0;//1000*Combo:Good ~ 500*Combo:Bad
+							Game.UpdateScore();
 							if (Game.FitToKey) {
 								if (Game.Lines[i].Color < 0) {
 									Game._._FitToKey += 0.02;
@@ -495,11 +491,11 @@ var Game = {
 								}
 								Game._._FitToKey = Math.min(1.5, Math.max(0.5, Game._._FitToKey));
 								Game.Audio.playbackRate = Math.min(1.5, Math.max(0.5, Game.Audio.playbackRate - (Game.Audio.playbackRate - Game._._FitToKey) / 10));
-								console.log(Game._._FitToKey);
 							}
 						} else if (!isUp) {
 							Game.Combo = 0;
 							Game.Score += Game._.MistakeScore;
+							Game.UpdateScore();
 						}
 					}
 				}
@@ -632,7 +628,7 @@ var Game = {
 		Game.Draw.ctx.canvas.addEventListener('touchend', function (e) {
 			if (!e) e = window.event;
 			for (let i = 0; i < e.touches.length; i++)
-				Game.OnKey(true, Game._.Keys[(e.touches.item(i).clientX / (Game.Draw.Parent.clientWidth / Game._.Keys.length)) << 0] < { Shift: false, Ctrl: false });
+				Game.OnKey(true, Game._.Keys[(e.touches.item(i).clientX / (Game.Draw.Parent.clientWidth / Game._.Keys.length)) << 0] , { Shift: false, Ctrl: false });
 		});
 	},//Document.onload
 	SEPlay: () => {
@@ -643,6 +639,9 @@ var Game = {
 			}
 		}
 		console.log("_");
+	},
+	UpdateScore() {
+		GetElm("score").innerText = Game.Score; 
 	}
 }
 var Game_Keyboard_ = {
@@ -702,7 +701,7 @@ var UI = {
 		DOM.classList.add("deactivebtn");
 	}, Blink: (DOM) => {
 		DOM.classList.add("blink");
-	}, UnBlink: (DOM, Fn) => {
+	}, UnBlink: (DOM) => {
 		DOM.classList.remove("blink");
 	}
 };
@@ -735,17 +734,16 @@ var Util = {
 	}, Polyfill: () => {
 		window.performance = window.performance || {};
 		window.performance.now = window.performance.now || (() => new Date().getTime());
-
-		var timer = null;
-		window.requestAnimationFrame = window.requestAnimationFrame || ((callback) => {
-			clearTimeout(timer);
-			setTimeout(callback, 1000 / 60);
-		});
+		(function () {
+			var requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame ||
+				window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
+			window.requestAnimationFrame = requestAnimationFrame;
+		})();
 	}
 }
 var MyStorage = {
 	Get: function (FileName, Fn) {
-		if (!localStorage[FileName])
+		if (!localStorage.getItem(FileName))
 			Fn([]);
 		else
 			Fn(JSON.parse(localStorage.getItem(FileName)));
