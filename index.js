@@ -32,15 +32,15 @@ function Onload() {
 				GetElm("se").classList.add("unselbtn");
 				GetElm("se").classList.remove("selbtn");
 				GetElm("se").innerText="SE-Off";
-				Game._.PlaySE=false;
+				Game.PlaySE=false;
 			}else{
 				GetElm("se").classList.remove("selbtn");
 				GetElm("se").classList.add("unselbtn");
 				GetElm("se").innerText="SE-On";
-				Game._.PlaySE=true;
+				Game.PlaySE=true;
 			}
 	});
-	Game._.PlaySE=GetElm("se").classList.contains("selbtn");
+	Game.PlaySE=GetElm("se").classList.contains("selbtn");
 	Util.LoadScript("songs.js", () => {
 		SongList=SongList.sort((a,b)=>a.Title<b.Title?-1:a.Title>b.Title?1:0);
 		ReflushSongList();
@@ -290,9 +290,11 @@ class Drawing {
 	}
 }
 var Game = {
-	_: { Keys: [83, 68, 70, 32, 74, 75, 76], MakingLongKeys: [87, 69, 82, 66, 85, 73, 79], ReadyTime: 1000, BorderY: 0.8, Radius: 1 / 2, MaxScoreLimitGOSA: 50, LimitGOSA: 100, MistakeScore: -100, SECount: 50, SEPath: "Tap.mp3", PlaySE: false },
+	_: { Keys: [83, 68, 70, 32, 74, 75, 76], MakingLongKeys: [87, 69, 82, 66, 85, 73, 79], ReadyTime: 1000, BorderY: 0.8, Radius: 1 / 2, MaxScoreLimitGOSA: 50, LimitGOSA: 200, MistakeScore: -100, SECount: 50, SEPath: "Tap.mp3",_FitToKey:1 },
 	Audio: new Audio(),//Overwritten by Init
 	SE: [new Audio()],
+	PlaySE: false,
+	FitToKey: false,
 	Draw: undefined,//Overwritten by Game.OnLoad
 	Lines: [{ Color: 0, Light: 0, Nodes: [{ Time: [], _: { Pressed: false } }] }],//Overwritten by Init Time.len==3=> _.KeyDowned:false/true
 	MakingMode: false,//Trueのとき、Lines.Nodesがsortされているとは限らない
@@ -301,7 +303,7 @@ var Game = {
 	FinishTime: 0,//Overwritten by Init
 	Speed: 5000,/////Overwritten by ReflushPreview
 	_score: 0,//Overwritten by Init
-	Ticking:false,
+	Tickings:0,
 	set Score(x) { this._score = x; GetElm("score").innerText = this._score; },
 	get Score() { return this._score; },
 	Combo: 0,//Overwritten by Init
@@ -317,6 +319,7 @@ var Game = {
 				Game.Audio.src = ("musics/" + MusicFile);
 			}
 			Game.Audio.currentTime = 0;
+			Game.Audio.playbackRate = 1;
 			Game.Score = 0;
 			Game.Combo = 0;
 			Game.FinishTime = Infinity;
@@ -338,14 +341,18 @@ var Game = {
 			NodeText = "";
 			Game.Lines.forEach((line) => { line.Nodes = line.Nodes.sort((a, b) => a.Time[0] - b.Time[0]); });
 			Game.Audio.play();
-			if (!Game.Ticking) {
+			if (Game.Tickings == 0) {
+				Game.Tickings++;
 				Game.Tick();
-				Game.Ticking = true;
 			}
 		});
 	}, Tick: () => {
+		if (Game.Tickings > 1) {
+			Game.Tickings--;
+			return;
+		}
 		if (Game.Audio.currentTime * 1000 > Game.FinishTime && GetElm("fin").classList.contains("fading2")) {
-			Game.Ticking = false;
+			Game.Tickings--;
 			Game.OnFin();
 			return;
 		}
@@ -355,8 +362,8 @@ var Game = {
 		Game.Lines.forEach((line, i) => {
 			line.Light *= 0.95;
 			line.Color *= 0.95;
-			var Color = `hsl(${line.Color * 60 + 60},${line.Light * 80 + 20}%,${Math.min(0.4, line.Light) * 25 + 50}%)`;
-			var ColorOfNode = `hsl(${line.Color * 60 + 60},${line.Light * 80 + 20}%,${Math.min(0.4, line.Light) * 25 + 50}%)`;
+			var Color = `hsl(${line.Color * 60 + 60},${Math.min(0.8,line.Light)*100 + 20}%,${Math.min(0.4, line.Light) * 25 + 50}%)`;
+			var ColorOfNode = `hsl(${line.Color * 60 + 60},${Math.min(0.8,line.Light)*100 + 10}%,${Math.min(0.4, line.Light) * 25 + 50}%)`;
 			var Linex = 1 / Game.Lines.length * (i + 0.5);
 			var Ry = Game._.Radius / Game.Lines.length * (Game.Draw.Scalex > Game.Draw.Scaley ? 1 : Game.Draw.Scalex / Game.Draw.Scaley);
 			Game.Draw.Path(() => {
@@ -372,7 +379,7 @@ var Game = {
 						if (y > 1 + Ry) return false;
 						if (y > Game._.BorderY && Game.AutoMode && !node._.Pressed ) {
 							node._.Pressed = true;
-							if (Game._.PlaySE) Game.SEPlay();
+							if (Game.PlaySE) Game.SEPlay();
 							line.Light = 1;
 						}
 						Game.Draw.Path(() => {
@@ -390,7 +397,7 @@ var Game = {
 						if (y2 > 1 + Ry) return false;
 						if (y2 > Game._.BorderY && Game.AutoMode  && !node._.Pressed ) {
 							node._.Pressed = true;
-							if (Game._.PlaySE) Game.SEPlay();
+							if (Game.PlaySE) Game.SEPlay();
 							line.Light = 1;
 						}
 						Game.Draw.Path(() => {
@@ -480,6 +487,16 @@ var Game = {
 								Math.max(Math.abs(This.Timespan), Game._.MaxScoreLimitGOSA) - Game._.MaxScoreLimitGOSA) / (Game._.LimitGOSA - Game._.MaxScoreLimitGOSA) //0:Good ~ 1:Bad
 								* 0.9 + 0.1 //.1:Good ~ 1:Bad
 								, 2) * 5.1 + 490) << 0;//1000*Combo:Good ~ 500*Combo:Bad
+							if (Game.FitToKey) {
+								if (Game.Lines[i].Color < 0) {
+									Game._._FitToKey += 0.02;
+								} else if (Game.Lines[i].Color > 0) {
+									Game._._FitToKey -= 0.02;
+								}
+								Game._._FitToKey = Math.min(1.5, Math.max(0.5, Game._._FitToKey));
+								Game.Audio.playbackRate = Math.min(1.5, Math.max(0.5, Game.Audio.playbackRate - (Game.Audio.playbackRate - Game._._FitToKey) / 10));
+								console.log(Game._._FitToKey);
+							}
 						} else if (!isUp) {
 							Game.Combo = 0;
 							Game.Score += Game._.MistakeScore;
@@ -519,7 +536,7 @@ var Game = {
 				}
 			}
 		}
-		if (Game._.PlaySE && Found && !isUp) Game.SEPlay();
+		if (Game.PlaySE && Found && !isUp) Game.SEPlay();
 	}, OnFin: () => {
 		if (!Game.AutoMode) {
 			ShowFin();
@@ -752,7 +769,8 @@ window.addEventListener("load", () => {
 	} catch (e) { }
 	var A = Util.URLtoObject();
 	Game.MakingMode = "making" in A;
-	Game._.PlaySE = "se" in A;
+	Game.PlaySE = "se" in A;
+	Game.FitToKey = "fit" in A;
 	UI.Onload();
 	Game.OnLoad();
 	Onload();
