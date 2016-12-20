@@ -301,6 +301,7 @@ var Game = {
 	FinishTime: 0,//Overwritten by Init
 	Speed: 5000,/////Overwritten by ReflushPreview
 	_score: 0,//Overwritten by Init
+	Ticking:false,
 	set Score(x) { this._score = x; GetElm("score").innerText = this._score; },
 	get Score() { return this._score; },
 	Combo: 0,//Overwritten by Init
@@ -337,10 +338,14 @@ var Game = {
 			NodeText = "";
 			Game.Lines.forEach((line) => { line.Nodes = line.Nodes.sort((a, b) => a.Time[0] - b.Time[0]); });
 			Game.Audio.play();
-			Game.Tick();
+			if (!Game.Ticking) {
+				Game.Tick();
+				Game.Ticking = true;
+			}
 		});
 	}, Tick: () => {
 		if (Game.Audio.currentTime * 1000 > Game.FinishTime && GetElm("fin").classList.contains("fading2")) {
+			Game.Ticking = false;
 			Game.OnFin();
 			return;
 		}
