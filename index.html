@@ -72,7 +72,10 @@
 		#prev,#next{font-weight: bold;min-width: 1em;border-radius: 2em;}
 		#speed{flex-basis: 3em;}
 		
-		#song,#speed{font-size: 1.5em;}
+		#inputs>*{font-size: 1.5em;}
+		#inputs>*:not(:first-child){
+			margin-left: 1em;
+		}
 		#name,#songlist>*,#tags>*{font-size:1.5em;}
 
 		#inputs{margin-bottom: 1em;}
@@ -252,7 +255,9 @@
 <div class="cV fading2" id="menu">
 	<div class="cH" id="inputs">
 		<div class="grow" id="song" song="_">Song...</div>
-		<div id="speed" speed="1">Speedx1.0</div>
+		<div class="unselbtn" id="se">SE-Off</div>
+		<div id="speed" speed="1">
+	Speedx1.0</div>
 	</div>
 	<div class="grow" id="menubody">
 		<div class="cV fullH fullW scrollY fading2" id="detail">

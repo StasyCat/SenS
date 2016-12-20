@@ -27,6 +27,20 @@ function Onload() {
 			AddRanking(A);
 		}
 	});
+	GetElm("se").addEventListener("click", () => {
+			if (GetElm("se").classList.contains("selbtn")){
+				GetElm("se").classList.add("unselbtn");
+				GetElm("se").classList.remove("selbtn");
+				GetElm("se").innerText="SE-Off";
+				Game._.PlaySE=false;
+			}else{
+				GetElm("se").classList.remove("selbtn");
+				GetElm("se").classList.add("unselbtn");
+				GetElm("se").innerText="SE-On";
+				Game._.PlaySE=true;
+			}
+	});
+	Game._.PlaySE=GetElm("se").classList.contains("selbtn");
 	Util.LoadScript("songs.js", () => {
 		SongList=SongList.sort((a,b)=>a.Title<b.Title?-1:a.Title>b.Title?1:0);
 		ReflushSongList();
@@ -351,8 +365,9 @@ var Game = {
 						var y = Math.pow(1 - ((node.Time[0] - now) / Game.Speed), 5) * (Game._.BorderY + Ry) - Ry;
 						if (y < -Ry) return !Game.MakingMode;
 						if (y > 1 + Ry) return false;
-						if (y > Game._.BorderY && Game.AutoMode) {
+						if (y > Game._.BorderY && Game.AutoMode && !node._.Pressed ) {
 							node._.Pressed = true;
+							if (Game._.PlaySE) Game.SEPlay();
 							line.Light = 1;
 						}
 						Game.Draw.Path(() => {
@@ -368,8 +383,9 @@ var Game = {
 						var y2 = Math.pow(1 - ((node.Time[1] - now) / Game.Speed), 5) * (Game._.BorderY + Ry) - Ry;//大きい
 						if (y1 < -Ry) return !Game.MakingMode;
 						if (y2 > 1 + Ry) return false;
-						if (y2 > Game._.BorderY && Game.AutoMode) {
+						if (y2 > Game._.BorderY && Game.AutoMode  && !node._.Pressed ) {
 							node._.Pressed = true;
+							if (Game._.PlaySE) Game.SEPlay();
 							line.Light = 1;
 						}
 						Game.Draw.Path(() => {
