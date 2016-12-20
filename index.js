@@ -9,8 +9,8 @@ function Onload() {
 		ReflushSongList();
 	});
 	GetElm("speed").addEventListener("click", () => {
-		var tmp = Number.parseFloat((prompt("楽譜が落ちるスピードを指定できます(0.5~5.0倍)...") || "").replace(/[^0-9\.]+/g, ""));
-		if (!Number.isNaN(tmp)) {
+		var tmp = parseFloat((prompt("楽譜が落ちるスピードを指定できます(0.5~5.0倍)...") || "").replace(/[^0-9\.]+/g, ""));
+		if (!isNaN(tmp)) {
 			GetElm("speed").innerText = "Speedx" + Math.min(5, Math.max(0.5, ((tmp * 10) << 0) / 10)).toFixed(1);
 			GetElm("speed").setAttribute("speed", "" + Math.min(5, Math.max(0.5, ((tmp * 10) << 0) / 10)));
 			VerifyMenu();
@@ -28,21 +28,21 @@ function Onload() {
 		}
 	});
 	GetElm("se").addEventListener("click", () => {
-			if (GetElm("se").classList.contains("selbtn")){
-				GetElm("se").classList.add("unselbtn");
-				GetElm("se").classList.remove("selbtn");
-				GetElm("se").innerText="SE-Off";
-				Game.PlaySE=false;
-			}else{
-				GetElm("se").classList.remove("selbtn");
-				GetElm("se").classList.add("unselbtn");
-				GetElm("se").innerText="SE-On";
-				Game.PlaySE=true;
-			}
+		if (GetElm("se").classList.contains("selbtn")) {
+			GetElm("se").classList.add("unselbtn");
+			GetElm("se").classList.remove("selbtn");
+			GetElm("se").innerText = "SE-Off";
+			Game.PlaySE = false;
+		} else {
+			GetElm("se").classList.remove("selbtn");
+			GetElm("se").classList.add("unselbtn");
+			GetElm("se").innerText = "SE-On";
+			Game.PlaySE = true;
+		}
 	});
-	Game.PlaySE=GetElm("se").classList.contains("selbtn");
+	Game.PlaySE = GetElm("se").classList.contains("selbtn");
 	Util.LoadScript("songs.js", () => {
-		window["SongList"]=window["SongList"].sort((a,b)=>a["Title"]<b["Title"]?-1:a["Title"]>b["Title"]?1:0);
+		window["SongList"] = window["SongList"].sort((a, b) => a["Title"] < b["Title"] ? -1 : a["Title"] > b["Title"] ? 1 : 0);
 		ReflushSongList();
 		ReflushTagList();
 	});
@@ -128,7 +128,7 @@ function ReflushSongList() {
 	}
 }
 function DetailReflushWithSong() {
-	GetElm("detailtext").innerText = "縦に7本レーンがありまして、左から順に、[S] [D] [F] [Space] [J] [K] [L] のキーを押して、落ちてくる譜面を叩いてください。\n\n曲へのコメント\n" + window["SongList"][Number.parseInt(GetElm("song").getAttribute("song"),10)]["Detail"];
+	GetElm("detailtext").innerText = "縦に7本レーンがありまして、左から順に、[S] [D] [F] [Space] [J] [K] [L] のキーを押して、落ちてくる譜面を叩いてください。\n\n曲へのコメント\n" + window["SongList"][parseInt(GetElm("song").getAttribute("song"), 10)]["Detail"];
 }
 function ShowGame() {
 	var Count = 0;
@@ -159,7 +159,7 @@ function StartGame() {
 }
 function ReflushPreview() {
 	Game.AutoMode = false;
-	Game.Speed = 5000 / Number.parseFloat(GetElm("speed").getAttribute("speed"));//Speed Linked
+	Game.Speed = 5000 / parseFloat(GetElm("speed").getAttribute("speed"));//Speed Linked
 	Game.Init();
 	Game.AutoMode = true;
 }
@@ -187,7 +187,7 @@ var RankingDatas = [];
 function ReflushRanking() {
 	var DOM = GetElm("rankinglist");
 	DOM.innerHTML = "";
-	MyStorage.Get(window["SongList"][Number.parseInt(GetElm("song").getAttribute("song"),10)]["File"], (datas) => {
+	MyStorage.Get(window["SongList"][parseInt(GetElm("song").getAttribute("song"), 10)]["File"], (datas) => {
 		RankingDatas = datas.sort((a, b) => a.p - b.p);
 		RankingDatas.forEach((data, i) => {
 			var LI = document.createElement("li");
@@ -197,7 +197,7 @@ function ReflushRanking() {
 	});
 }
 function AddRanking(A) {
-	MyStorage.Add(window["SongList"][Number.parseInt(GetElm("song").getAttribute("song"),10)]["File"], {
+	MyStorage.Add(window["SongList"][parseInt(GetElm("song").getAttribute("song"), 10)]["File"], {
 		p: Game.Score,
 		n: A
 	}, () => {
@@ -225,13 +225,22 @@ class Drawing {
 		this.Scaley = 1;
 		var This = this;
 		((Fn) => {
-			var i=false;
+			var i = false;
 			window.addEventListener('resize', () => {
 				if (i !== false) { clearTimeout(i); }
 				i = setTimeout(Fn, 100);
 			});
 		})(() => this.OnResize.call(This));
 		this.OnResize();
+	}
+	ChangeDPR(dpr) {
+		let Canvas = this.ctx.canvas;
+		this.Scalex = (dpr || window.devicePixelRatio || 1) * this.Parent.clientWidth;
+		this.Scaley = (dpr || window.devicePixelRatio || 1) * this.Parent.clientHeight;
+		Canvas.width = this.Scalex << 0;
+		Canvas.height = this.Scaley << 0;
+		this.ctx.lineWidth = dpr || window.devicePixelRatio || 1;
+		console.log("DPR: " + dpr + "/" + (window.devicePixelRatio || 1))
 	}
 	OnResize() {
 		let Canvas = this.ctx.canvas;
@@ -247,11 +256,11 @@ class Drawing {
 		this.ctx.beginPath();
 		var Result = Fn();
 		if ("Fill" in Result) {
-			this.ctx.fillStyle = Result.Fill;
+			this.ctx.fillStyle = Result["Fill"];
 			this.ctx.fill();
 		}
 		if ("Stroke" in Result) {
-			this.ctx.strokeStyle = Result.Stroke;
+			this.ctx.strokeStyle = Result["Stroke"];
 			this.ctx.stroke();
 		}
 	}
@@ -279,14 +288,14 @@ class Drawing {
 		let Tmp = this.ctx.fillStyle;
 		let Tmp2 = this.ctx.globalCompositeOperation;
 		this.ctx.fillStyle = Style;
-		this.ctx.globalCompositeOperation = globalCompositeOperation|| 'source-over';
+		this.ctx.globalCompositeOperation = globalCompositeOperation || 'source-over';
 		this.ctx.fillRect(0, 0, this.Scalex << 0, this.Scaley << 0);
 		this.ctx.fillStyle = Tmp;
 		this.ctx.globalCompositeOperation = Tmp2;
 	}
 }
 var Game = {
-	_: { Keys: [83, 68, 70, 32, 74, 75, 76], MakingLongKeys: [87, 69, 82, 66, 85, 73, 79], ReadyTime: 1000, BorderY: 0.8, Radius: 1 / 2, MaxScoreLimitGOSA: 50, LimitGOSA: 200, MistakeScore: -100, SECount: 50, SEPath: "Tap.mp3",_FitToKey:1 },
+	_: { Keys: [83, 68, 70, 32, 74, 75, 76], MakingLongKeys: [87, 69, 82, 66, 85, 73, 79], ReadyTime: 1000, BorderY: 0.8, Radius: 1 / 2, MaxScoreLimitGOSA: 50, LimitGOSA: 200, MistakeScore: -100, SECount: 50, SEPath: "Tap.mp3", _FitToKey: 1 },
 	Audio: new Audio(),//Overwritten by Init
 	SE: [new Audio()],
 	PlaySE: false,
@@ -299,7 +308,7 @@ var Game = {
 	FinishTime: 0,//Overwritten by Init
 	Speed: 5000,/////Overwritten by ReflushPreview
 	Score: 0,//Overwritten by Init
-	Tickings:0,
+	Tickings: 0,
 	Combo: 0,//Overwritten by Init
 	Init: () => {
 		Game.Nodes = undefined;
@@ -307,7 +316,7 @@ var Game = {
 		Game.Nodes = [];
 		Game.Lines = [];
 		Game._.Keys.forEach(() => Game.Lines.push({ Color: 0, Light: 0, Nodes: [] }));
-		Util.LoadScript("datas/"+window["SongList"][Number.parseInt(GetElm("song").getAttribute("song"),10)]["File"] + ".js", () => {
+		Util.LoadScript("datas/" + window["SongList"][parseInt(GetElm("song").getAttribute("song"), 10)]["File"] + ".js", () => {
 			if (!Game.AutoMode || window["MusicFile"] != Game.MusicFile) {
 				Game.MusicFile = window["MusicFile"];
 				Game.Audio.src = ("musics/" + window["MusicFile"]);
@@ -319,7 +328,7 @@ var Game = {
 			Game.Combo = 0;
 			Game.FinishTime = Infinity;
 			window["NodeText"].split(" ").forEach((word) => {
-				var tmp = word.split(":").map(v => Number.parseInt(v,10));
+				var tmp = word.split(":").map(v => parseInt(v, 10));
 				switch (tmp.length) {
 					case 1:
 						if (!Game.MakingMode)
@@ -351,14 +360,15 @@ var Game = {
 			Game.OnFin();
 			return;
 		}
+		FPS.Tick();
 		var now = Game.Audio.currentTime * 1000;
 		Game.Draw.ctx.clearRect(0, 0, Game.Draw.Scalex, Game.Draw.Scaley);
 		Game.Draw.ctx.globalCompositeOperation = "lighter";
 		Game.Lines.forEach((line, i) => {
 			line.Light *= 0.95;
 			line.Color *= 0.95;
-			var Color = `hsl(${line.Color * 60 + 60},${Math.min(0.8,line.Light)*100 + 20}%,${Math.min(0.4, line.Light) * 25 + 50}%)`;
-			var ColorOfNode = `hsl(${line.Color * 60 + 60},${Math.min(0.8,line.Light)*100 + 10}%,${Math.min(0.4, line.Light) * 25 + 50}%)`;
+			var Color = `hsl(${line.Color * 60 + 60},${Math.min(0.8, line.Light) * 100 + 20}%,${Math.min(0.4, line.Light) * 25 + 50}%)`;
+			var ColorOfNode = `hsl(${line.Color * 60 + 60},${Math.min(0.8, line.Light) * 100 + 10}%,${Math.min(0.4, line.Light) * 25 + 50}%)`;
 			var Linex = 1 / Game.Lines.length * (i + 0.5);
 			var Ry = Game._.Radius / Game.Lines.length * (Game.Draw.Scalex > Game.Draw.Scaley ? 1 : Game.Draw.Scalex / Game.Draw.Scaley);
 			Game.Draw.Path(() => {
@@ -372,7 +382,7 @@ var Game = {
 						var y = Math.pow(1 - ((node.Time[0] - now) / Game.Speed), 5) * (Game._.BorderY + Ry) - Ry;
 						if (y < -Ry) return !Game.MakingMode;
 						if (y > 1 + Ry) return false;
-						if (y > Game._.BorderY && Game.AutoMode && !node._.Pressed ) {
+						if (y > Game._.BorderY && Game.AutoMode && !node._.Pressed) {
 							node._.Pressed = true;
 							if (Game.PlaySE) Game.SEPlay();
 							line.Light = 1;
@@ -390,7 +400,7 @@ var Game = {
 						var y2 = Math.pow(1 - ((node.Time[1] - now) / Game.Speed), 5) * (Game._.BorderY + Ry) - Ry;//大きい
 						if (y1 < -Ry) return !Game.MakingMode;
 						if (y2 > 1 + Ry) return false;
-						if (y2 > Game._.BorderY && Game.AutoMode  && !node._.Pressed ) {
+						if (y2 > Game._.BorderY && Game.AutoMode && !node._.Pressed) {
 							node._.Pressed = true;
 							if (Game.PlaySE) Game.SEPlay();
 							line.Light = 1;
@@ -628,7 +638,7 @@ var Game = {
 		Game.Draw.ctx.canvas.addEventListener('touchend', function (e) {
 			if (!e) e = window.event;
 			for (let i = 0; i < e.touches.length; i++)
-				Game.OnKey(true, Game._.Keys[(e.touches.item(i).clientX / (Game.Draw.Parent.clientWidth / Game._.Keys.length)) << 0] , { Shift: false, Ctrl: false });
+				Game.OnKey(true, Game._.Keys[(e.touches.item(i).clientX / (Game.Draw.Parent.clientWidth / Game._.Keys.length)) << 0], { Shift: false, Ctrl: false });
 		});
 	},//Document.onload
 	SEPlay: () => {
@@ -641,13 +651,46 @@ var Game = {
 		console.log("_");
 	},
 	UpdateScore() {
-		GetElm("score").innerText = Game.Score; 
+		GetElm("score").innerText = Game.Score;
 	}
 }
 var Game_Keyboard_ = {
 	Pressed: {}
 };
 var Game_Onkey_MakingLong = [];
+var FPS = {
+	_: {
+		Span: 100, EventFn: [(fps) => console.log("FPS: " + fps), (fps) => {
+			if (fps < 45) {
+				if (FPS._dpr > 0.5) {
+					FPS._dpr *= 0.8;
+					FPS._dpr = Math.min(window.devicePixelRatio || 1, Math.max(0.5, FPS._dpr));
+					Game.Draw.ChangeDPR(FPS._dpr);
+				}
+			} if (fps > 45) {
+				if (FPS._dpr < (window.devicePixelRatio || 1)) {
+					FPS._dpr += ((window.devicePixelRatio || 1) - FPS._dpr) / 3 + 0.2;
+					FPS._dpr = Math.min(window.devicePixelRatio || 1, Math.max(0.5, FPS._dpr));
+					Game.Draw.ChangeDPR(FPS._dpr);
+				}
+			}
+		}]
+	},
+	_dpr: window.devicePixelRatio || 1,
+	Prev: 0, FCount: 0, CFPS: 0,
+	Tick: () => {
+		FPS.FCount++;
+		if (FPS.FCount % FPS._.Span == 0) {
+			var now = performance.now();
+			FPS.FCount = 0;
+			FPS.CFPS = (1000 / (now - FPS.Prev) * FPS._.Span) << 0;
+			FPS.Prev = now;
+			FPS._.EventFn.forEach((v) => {
+				v(FPS.CFPS);
+			});
+		}
+	}
+};
 var UI = {
 	DOMs: {
 		Title: undefined
@@ -772,7 +815,7 @@ window.addEventListener("load", () => {
 	UI.Onload();
 	Game.OnLoad();
 	Onload();
-	
+
 	UI.Fadein(GetElm("selectsong"));
 	UI.Fadeout(GetElm("detail"));
 });
