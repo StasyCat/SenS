@@ -27,8 +27,9 @@ function Onload() {
 		}
 	});
 	Util.LoadScript("songs.js", () => {
-		ReflushTagList();
+		SongList=SongList.sort((a,b)=>a.Title<b.Title?-1:a.Title>b.Title?1:0);
 		ReflushSongList();
+		ReflushTagList();
 	});
 	setTimeout(() => {
 		ShowMenu();
@@ -61,7 +62,7 @@ function VerifyMenu() {
 		UI.DeActiveBtn(GetElm("next"));
 	}
 }
-var SongList = [{ Title: "", Folder: "", Level: 0, Detail: "" }];
+var SongList = [{ Title: "", File: "", Level: 0, Detail: "" }];
 function ReflushTagList() {
 	GetElm("tags").innerHTML = "";
 	var Tags = {};
@@ -172,7 +173,7 @@ var RankingDatas = [];
 function ReflushRanking() {
 	var DOM = GetElm("rankinglist");
 	DOM.innerHTML = "";
-	MyStorage.Get(SongList[Number.parseInt(GetElm("song").getAttribute("song"))].Folder, (datas) => {
+	MyStorage.Get(SongList[Number.parseInt(GetElm("song").getAttribute("song"))].File, (datas) => {
 		RankingDatas = datas.sort((a, b) => a.p - b.p);
 		RankingDatas.forEach((data, i) => {
 			var LI = document.createElement("li");
@@ -182,7 +183,7 @@ function ReflushRanking() {
 	});
 }
 function AddRanking(A) {
-	MyStorage.Add(SongList[Number.parseInt(GetElm("song").getAttribute("song"))].Folder, {
+	MyStorage.Add(SongList[Number.parseInt(GetElm("song").getAttribute("song"))].File, {
 		p: Game.Score,
 		n: A
 	}, () => {
@@ -294,10 +295,10 @@ var Game = {
 		Game.Nodes = [];
 		Game.Lines = [];
 		Game._.Keys.forEach(() => Game.Lines.push({ Color: 0, Light: 0, Nodes: [] }));
-		Util.LoadScript(SongList[Number.parseInt(GetElm("song").getAttribute("song"))].Folder + "/setting.js", () => {
+		Util.LoadScript("datas/"+SongList[Number.parseInt(GetElm("song").getAttribute("song"))].File + ".js", () => {
 			if (!Game.AutoMode || MusicFile != Game.MusicFile) {
 				Game.MusicFile = MusicFile;
-				Game.Audio.src = (SongList[Number.parseInt(GetElm("song").getAttribute("song"))].Folder + "/" + MusicFile);
+				Game.Audio.src = ("music/" + MusicFile);
 			}
 			Game.Audio.currentTime = 0;
 			Game.Score = 0;
@@ -704,20 +705,20 @@ var Util = {
 	}
 }
 var MyStorage = {
-	Get: function (FolderName, Fn) {
-		if (!localStorage[FolderName])
+	Get: function (FileName, Fn) {
+		if (!localStorage[FileName])
 			Fn([]);
 		else
-			Fn(JSON.parse(localStorage.getItem(FolderName)));
-	}, Add: function (FolderName, Data, Fn) {
+			Fn(JSON.parse(localStorage.getItem(FileName)));
+	}, Add: function (FileName, Data, Fn) {
 		var Prev = [];
 		try {
-			Prev = JSON.parse(localStorage.getItem(FolderName));
+			Prev = JSON.parse(localStorage.getItem(FileName));
 		} catch (e) {
 			Prev = [];
 		}
 		Prev.push(Data);
-		localStorage.setItem(FolderName, JSON.stringify(Prev));
+		localStorage.setItem(FileName, JSON.stringify(Prev));
 		Fn();
 	}
 };
