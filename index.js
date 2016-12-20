@@ -43,6 +43,7 @@ function ShowMenu() {
 	UI.Fadein(GetElm("selectsong"), () => UI.Fadeout(GetElm("detail")));
 	UI.DeActiveBtn(GetElm("prev"));
 	UI.DeActiveBtn(GetElm("next"));
+	UI.UnBlink(GetElm("next"));
 	GetElm("next").addEventListener("click", function listener() {
 		if (GetElm("next").classList.contains("activebtn")) {
 			GetElm("next").removeEventListener("click", listener);
@@ -51,14 +52,10 @@ function ShowMenu() {
 	});
 	VerifyMenu();
 }
-var Selected_Next_Menu_Flag = true;
 function VerifyMenu() {
 	if (GetElm("song").getAttribute("song") != "_") {
 		UI.ActiveBtn(GetElm("next"));
-		if (Selected_Next_Menu_Flag) {
-			UI.Blink(GetElm("next"));
-			Selected_Next_Menu_Flag = false;
-		}
+		UI.Blink(GetElm("next"));
 		ReflushPreview();
 	} else {
 		UI.DeActiveBtn(GetElm("next"));
@@ -127,6 +124,7 @@ function ShowGame() {
 	UI.Fadeout(GetElm("fin"), CountingAndStart);
 	UI.ActiveBtn(GetElm("prev"));
 	UI.DeActiveBtn(GetElm("next"));
+	UI.UnBlink(GetElm("next"));
 	function CountingAndStart() {
 		Count++;
 		if (Count == 3) {
@@ -145,9 +143,10 @@ function StartGame() {
 	Game.Init();
 }
 function ReflushPreview() {
-	Game.AutoMode = true;
+	Game.AutoMode = false;
 	Game.Speed = 5000 / Number.parseFloat(GetElm("speed").getAttribute("speed"));//Speed Linked
 	Game.Init();
+	Game.AutoMode = true;
 }
 
 
@@ -162,6 +161,7 @@ function ShowFin() {
 	UI.Fadein(GetElm("fin"));
 	UI.ActiveBtn(GetElm("prev"));
 	UI.DeActiveBtn(GetElm("next"));
+	UI.UnBlink(GetElm("next"));
 	GetElm("prev").addEventListener("click", function listener() {
 		GetElm("prev").removeEventListener("click", listener);
 		ShowMenu();
@@ -274,8 +274,9 @@ class Drawing {
 	}
 }
 var Game = {
-	_: { Keys: [83, 68, 70, 32, 74, 75, 76], MakingLongKeys: [87, 69, 82, 66, 85, 73, 79], ReadyTime: 1000, BorderY: 0.8, Radius: 1 / 2, MaxScoreLimitGOSA: 50, LimitGOSA: 100, MistakeScore: -100 },
+	_: { Keys: [83, 68, 70, 32, 74, 75, 76], MakingLongKeys: [87, 69, 82, 66, 85, 73, 79], ReadyTime: 1000, BorderY: 0.8, Radius: 1 / 2, MaxScoreLimitGOSA: 50, LimitGOSA: 100, MistakeScore: -100, SECount: 50, SEPath: "Tap.mp3", PlaySE: false },
 	Audio: new Audio(),//Overwritten by Init
+	SE: [new Audio()],
 	Draw: undefined,//Overwritten by Game.OnLoad
 	Lines: [{ Color: 0, Light: 0, Nodes: [{ Time: [], _: { Pressed: false } }] }],//Overwritten by Init Time.len==3=> _.KeyDowned:false/true
 	MakingMode: false,//Trueのとき、Lines.Nodesがsortされているとは限らない
@@ -334,7 +335,7 @@ var Game = {
 			line.Light *= 0.95;
 			line.Color *= 0.95;
 			var Color = `hsl(${line.Color * 60 + 60},${line.Light * 80 + 20}%,${Math.min(0.4, line.Light) * 25 + 50}%)`;
-			var ColorOfNode = `hsla(${line.Color * 60 + 60},${line.Light * 80 + 20}%,${Math.min(0.4, line.Light) * 25 + 50}%,0.5)`;
+			var ColorOfNode = `hsl(${line.Color * 60 + 60},${line.Light * 80 + 20}%,${Math.min(0.4, line.Light) * 25 + 50}%)`;
 			var Linex = 1 / Game.Lines.length * (i + 0.5);
 			var Ry = Game._.Radius / Game.Lines.length * (Game.Draw.Scalex > Game.Draw.Scaley ? 1 : Game.Draw.Scalex / Game.Draw.Scaley);
 			Game.Draw.Path(() => {
@@ -342,42 +343,45 @@ var Game = {
 				Game.Draw.Round(Linex, Game._.BorderY, Game._.Radius / Game.Lines.length);
 				return { Stroke: Color };
 			});
-			Game.Draw.ctx.fillStyle = ColorOfNode;
-			Game.Draw.ctx.strokeStyle = ColorOfNode;
 			line.Nodes.some((node) => {
 				switch (node.Time.length) {
 					case 1:
 						var y = Math.pow(1 - ((node.Time[0] - now) / Game.Speed), 5) * (Game._.BorderY + Ry) - Ry;
 						if (y < -Ry) return !Game.MakingMode;
 						if (y > 1 + Ry) return false;
-						if (y > Game._.BorderY && Game.AutoMode)
+						if (y > Game._.BorderY && Game.AutoMode) {
 							node._.Pressed = true;
-						Game.Draw.ctx.beginPath();
-						Game.Draw.Round(Linex, y, Game._.Radius / Game.Lines.length);
-						if (node._.Pressed)
-							Game.Draw.ctx.stroke();
-						else
-							Game.Draw.ctx.fill();
+							line.Light = 1;
+						}
+						Game.Draw.Path(() => {
+							Game.Draw.Round(Linex, y, Game._.Radius / Game.Lines.length);
+							if (node._.Pressed)
+								return { Stroke: ColorOfNode };
+							else
+								return { Fill: ColorOfNode };
+						});
 						break;
 					case 2:
 						var y1 = Math.pow(1 - ((node.Time[0] - now) / Game.Speed), 5) * (Game._.BorderY + Ry) - Ry;//小さい
 						var y2 = Math.pow(1 - ((node.Time[1] - now) / Game.Speed), 5) * (Game._.BorderY + Ry) - Ry;//大きい
 						if (y1 < -Ry) return !Game.MakingMode;
 						if (y2 > 1 + Ry) return false;
-						if (y2 > Game._.BorderY && Game.AutoMode)
+						if (y2 > Game._.BorderY && Game.AutoMode) {
 							node._.Pressed = true;
-						Game.Draw.ctx.beginPath();
-						Game.Draw.LongRound(Linex, y2, y1 - y2, Game._.Radius / Game.Lines.length);
-						if (node._.Pressed)
-							Game.Draw.ctx.stroke();
-						else
-							Game.Draw.ctx.fill();
+							line.Light = 1;
+						}
+						Game.Draw.Path(() => {
+							Game.Draw.LongRound(Linex, y2, y1 - y2, Game._.Radius / Game.Lines.length);
+							if (node._.Pressed)
+								return { Stroke: ColorOfNode };
+							else
+								return { Fill: ColorOfNode };
+						});
 						break;
 				}
 				return false;
 			});
 		});
-		Game.Draw.ctx.globalCompositeOperation = "source-over";
 		requestAnimationFrame(Game.Tick);
 	}, OnKey: (isUp, Key, Other) => {
 		if (Game.AutoMode) return;
@@ -391,7 +395,7 @@ var Game = {
 			Game.Audio.play();
 			return;
 		}
-		if (!Game.MakingMode && !Game.Audio.played) return;
+		if (!Game.MakingMode && Game.Audio.paused) return;
 		var Found = Game._.Keys.some((key, i) => {
 			if (key == Key) {
 				if (Game.MakingMode && Other.Ctrl) {
@@ -485,10 +489,14 @@ var Game = {
 					});
 					if (This.ID >= 0)
 						Game.Lines[0].Nodes.splice(This.ID, 1);
-				} else
+					Found = true;
+				} else {
 					Game.Lines[0].Nodes.push({ Time: [now << 0], _: { Pressed: true } });
+					Found = true;
+				}
 			}
 		}
+		if (Game._.PlaySE && Found && !isUp) Game.SEPlay();
 	}, OnFin: () => {
 		if (!Game.AutoMode) {
 			ShowFin();
@@ -496,6 +504,13 @@ var Game = {
 			Game.Init();
 		}
 	}, OnLoad: () => {
+		Game.SE = [];
+		for (let i = 0; i < Game._.SECount; i++) {
+			let audio = new Audio(Game._.SEPath);
+			audio.preload = "auto";
+			Game.SE.push(audio);
+		}
+
 		Game.Audio = new Audio();
 		Game.Audio.preload = "auto";
 		Game.Audio.onended = () => {
@@ -579,7 +594,16 @@ var Game = {
 			for (let i = 0; i < e.touches.length; i++)
 				Game.OnKey(true, Game._.Keys[(e.touches.item(i).clientX / (Game.Draw.Parent.clientWidth / Game._.Keys.length)) << 0] < { Shift: false, Ctrl: false });
 		});
-	}//Document.onload
+	},//Document.onload
+	SEPlay: () => {
+		for (let i = 0; i < Game.SE.length; i++) {
+			if (Game.SE[i].paused) {
+				Game.SE[i].play();
+				return;
+			}
+		}
+		console.log("_");
+	}
 }
 var Game_Keyboard_ = {
 	Pressed: {}
@@ -636,17 +660,10 @@ var UI = {
 	}, DeActiveBtn: (DOM) => {
 		DOM.classList.remove("activebtn");
 		DOM.classList.add("deactivebtn");
-	}, Blink: (DOM, Fn) => {
-		Fn = Fn || (() => 0);
-		if (!DOM.classList.contains("blink")) {
-			DOM.addEventListener("webkitAnimationEnd", function listener() {
-				DOM.classList.remove("blink");
-				DOM.removeEventListener("webkitAnimationEnd", listener);
-				Fn();
-			});
-			DOM.classList.add("blink");
-		}
-		Fn();
+	}, Blink: (DOM) => {
+		DOM.classList.add("blink");
+	}, UnBlink: (DOM, Fn) => {
+		DOM.classList.remove("blink");
 	}
 };
 var Util = {
@@ -710,6 +727,9 @@ window.addEventListener("load", () => {
 	try {
 		document.documentElement.requestFullscreen();
 	} catch (e) { }
+	var A = Util.URLtoObject();
+	Game.MakingMode = "making" in A;
+	Game._.PlaySE = "se" in A;
 	UI.Onload();
 	Game.OnLoad();
 	Onload();

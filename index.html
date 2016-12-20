@@ -11,9 +11,21 @@
 	<link href="https://fonts.googleapis.com/css?family=Open+Sans|Open+Sans+Condensed:300|Quicksand:300|Raleway:200" id="gwebfont2"
 	/>
 	<style>
+		/* だって、海がデザイン変えるって言うから */
+		body{
+				background-image: url("background.gif");
+		}
+		body>*{
+			background:rgba(0,0,0,0.7);
+		}
+		#body>*{
+			background-color: transparent !important;
+		}
+	</style>
+	<style>
 		*{margin: 0;padding:0;}
 		body{
-			background: #000;
+			background-color: #000;
 			color:#CCC;
 			font-family: "Open Sans", 'Noto Sans Japanese', Roboto, "Yu Gothic", "Meiryo UI", sans-serif;
 			overflow: hidden;
@@ -173,7 +185,7 @@
 			animation: fading 0.2s ease-in-out reverse backwards;
 		}
 		.blink {
-			animation: blink 1.4s ease-in-out backwards;
+			animation: blink 1.4s ease-in-out infinite backwards;
 		}
 
 
