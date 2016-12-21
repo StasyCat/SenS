@@ -19,10 +19,11 @@
 			background:rgba(0,0,0,0.7);
 		}
 		#body>*{
-			background-color: transparent !important;
+			/*background-color: transparent !important;*/
+			box-shadow:  0 0 1em #000;
 		}
 	</style>
-	<style>
+<style>
 		*{margin: 0;padding:0;}
 		body{
 			background-color: #000;
@@ -215,10 +216,10 @@
 			background: transparent;
 		}
 	</style>
-<script src="index.min.js" async></script>
+<script src="index.1.js" async></script>
 </head>
 
-<body  oncontextmenu="return false" touchmove="function(e){e.preventDefault();}" onload="document.getElementById('gwebfont1').rel='stylesheet';document.getElementById('gwebfont2').rel='stylesheet';">
+<body oncontextmenu="return false" touchmove="function(e){e.preventDefault();}" onload="document.getElementById('gwebfont1').rel='stylesheet';document.getElementById('gwebfont2').rel='stylesheet';">
 <div class="fullH fullW cV">
 	<div class="fullW cH" id="head">
 		<span class="fullH deactivebtn" id="prev">&lt;</span>
@@ -257,7 +258,8 @@
 		<div class="grow" id="song" song="_">Song...</div>
 		<div class="unselbtn" id="se">SE-Off</div>
 		<div id="speed" speed="1">
-	Speedx1.0</div>
+			Speedx1.0
+			</div>
 	</div>
 	<div class="grow" id="menubody">
 		<div class="cV fullH fullW scrollY fading2" id="detail">

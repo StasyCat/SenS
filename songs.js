@@ -1,36 +1,31 @@
 var SongList = [
 	{
-		Title: "ロストワンの号哭 Lv.4",
+		Title: "ロストワンの号哭",
 		Level: 4,
-		File: "LostOne-4",
-		Detail: ""
+		File: "LostOne-4"
 	},
 	{
-		Title: "ロストワンの号哭 Lv.6",
+		Title: "ロストワンの号哭",
 		Level: 6,
-		File: "LostOne-6",
-		Detail: ""
+		File: "LostOne-6"
 	},
 	{
-		Title: "ロストワンの号哭 Lv.8",
+		Title: "ロストワンの号哭",
 		Level: 8,
-		File: "LostOne-8",
-		Detail: ""
+		File: "LostOne-8"
 	},
 	{
-		Title: "夜咄ディセイブ Lv.6",
+		Title: "夜咄ディセイブ",
 		Level: 6,
-		File: "Yobanashi-6",
-		Detail: ""
+		File: "Yobanashi-6"
 	},
 	{
-		Title: "RPG Lv.4",
-		Level: 4,
-		File: "RPG-8",
-		Detail: ""
+		Title: "RPG",
+		Level: 8,
+		File: "RPG-8"
 	},
 	{
-		Title: "アウターサイエンス Lv.7",
+		Title: "アウターサイエンス",
 		Level: 7,
 		File: "Science-7",
 		Detail: ""

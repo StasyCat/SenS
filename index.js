@@ -34,14 +34,26 @@ function Onload() {
 			GetElm("se").innerText = "SE-Off";
 			Game.PlaySE = false;
 		} else {
-			GetElm("se").classList.remove("selbtn");
-			GetElm("se").classList.add("unselbtn");
+			GetElm("se").classList.remove("unselbtn");
+			GetElm("se").classList.add("selbtn");
 			GetElm("se").innerText = "SE-On";
 			Game.PlaySE = true;
 		}
 	});
-	Game.PlaySE = GetElm("se").classList.contains("selbtn");
+	if (Game.PlaySE) {
+		GetElm("se").classList.add("selbtn");
+		GetElm("se").classList.add("unselbtn");
+		GetElm("se").innerText = "SE-On";
+	} else {
+		GetElm("se").classList.add("unselbtn");
+		GetElm("se").classList.add("selbtn");
+		GetElm("se").innerText = "SE-Off";
+	}
 	Util.LoadScript("songs.js", () => {
+		window["SongList"] = window["SongList"].map((v) => {
+			v["Title"] += " Lv." + v["Level"];
+			return v;
+		})
 		window["SongList"] = window["SongList"].sort((a, b) => a["Title"] < b["Title"] ? -1 : a["Title"] > b["Title"] ? 1 : 0);
 		ReflushSongList();
 		ReflushTagList();
@@ -119,16 +131,12 @@ function ReflushSongList() {
 		LI.addEventListener("click", () => {
 			GetElm("song").innerText = v["Title"];
 			GetElm("song").setAttribute("song", i);
-			DetailReflushWithSong();
 			VerifyMenu();
 			UI.Fadeout(GetElm("selectsong"));
 			UI.Fadein(GetElm("detail"));
 		});
 		GetElm("songlist").appendChild(LI)
 	}
-}
-function DetailReflushWithSong() {
-	GetElm("detailtext").innerText = "縦に7本レーンがありまして、左から順に、[S] [D] [F] [Space] [J] [K] [L] のキーを押して、落ちてくる譜面を叩いてください。\n\n曲へのコメント\n" + window["SongList"][parseInt(GetElm("song").getAttribute("song"), 10)]["Detail"];
 }
 function ShowGame() {
 	var Count = 0;
