@@ -13,7 +13,7 @@ function Onload() {
 		if (!isNaN(tmp)) {
 			GetElm("speed").innerText = "Speedx" + Math.min(5, Math.max(0.5, ((tmp * 10) << 0) / 10)).toFixed(1);
 			GetElm("speed").setAttribute("speed", "" + Math.min(5, Math.max(0.5, ((tmp * 10) << 0) / 10)));
-			VerifyMenu();
+			ReflushPreview();
 		}
 	});
 	GetElm("name").addEventListener("click", () => {
@@ -28,27 +28,8 @@ function Onload() {
 		}
 	});
 	GetElm("se").addEventListener("click", () => {
-		if (GetElm("se").classList.contains("selbtn")) {
-			GetElm("se").classList.add("unselbtn");
-			GetElm("se").classList.remove("selbtn");
-			GetElm("se").innerText = "SE-Off";
-			Game.PlaySE = false;
-		} else {
-			GetElm("se").classList.remove("unselbtn");
-			GetElm("se").classList.add("selbtn");
-			GetElm("se").innerText = "SE-On";
-			Game.PlaySE = true;
-		}
+		Game.PlaySE = GetElm("se").classList.contains("unselbtn");
 	});
-	if (Game.PlaySE) {
-		GetElm("se").classList.add("selbtn");
-		GetElm("se").classList.add("unselbtn");
-		GetElm("se").innerText = "SE-On";
-	} else {
-		GetElm("se").classList.add("unselbtn");
-		GetElm("se").classList.add("selbtn");
-		GetElm("se").innerText = "SE-Off";
-	}
 	Util.LoadScript("songs.js", () => {
 		window["SongList"] = window["SongList"].map((v) => {
 			v["Title"] += " Lv." + v["Level"];
@@ -63,27 +44,23 @@ function Onload() {
 	}, 500);
 }
 function ShowMenu() {
-	UI.ChangeTitle("Song/Speed");
-	UI.Fadein(GetElm("menu"));
-	UI.Fadein(GetElm("game"));
-	UI.Fadeout(GetElm("gameback"));
-	UI.Fadeout(GetElm("fin"));
-	UI.DeActiveBtn(GetElm("prev"));
-	UI.DeActiveBtn(GetElm("next"));
-	UI.UnBlink(GetElm("next"));
+	UI.InitCommon("Song/Speed", ["game", "menu"]);
 	GetElm("next").addEventListener("click", function listener() {
 		if (GetElm("next").classList.contains("activebtn")) {
 			GetElm("next").removeEventListener("click", listener);
 			ShowGame();
 		}
 	});
-	VerifyMenu();
+	ReflushPreview();
 }
-function VerifyMenu() {
+function ReflushPreview() {
 	if (GetElm("song").getAttribute("song") != "_") {
 		UI.ActiveBtn(GetElm("next"));
 		UI.Blink(GetElm("next"));
-		ReflushPreview();
+		Game.AutoMode = false;
+		Game.Speed = 5000 / parseFloat(GetElm("speed").getAttribute("speed"));//Speed Linked
+		Game.Init();
+		Game.AutoMode = true;
 	} else {
 		UI.DeActiveBtn(GetElm("next"));
 	}
@@ -131,7 +108,7 @@ function ReflushSongList() {
 		LI.addEventListener("click", () => {
 			GetElm("song").innerText = v["Title"];
 			GetElm("song").setAttribute("song", i);
-			VerifyMenu();
+			ReflushPreview();
 			UI.Fadeout(GetElm("selectsong"));
 			UI.Fadein(GetElm("detail"));
 		});
@@ -139,52 +116,21 @@ function ReflushSongList() {
 	}
 }
 function ShowGame() {
-	var Count = 0;
-	UI.ChangeTitle(GetElm("song").innerText);
-	UI.Fadeout(GetElm("menu"), CountingAndStart);
-	UI.Fadein(GetElm("game"), CountingAndStart);
-	UI.Fadein(GetElm("gameback"), CountingAndStart);
-	UI.Fadeout(GetElm("fin"), CountingAndStart);
-	UI.ActiveBtn(GetElm("prev"));
-	UI.DeActiveBtn(GetElm("next"));
-	UI.UnBlink(GetElm("next"));
-	function CountingAndStart() {
-		Count++;
-		if (Count == 3) {
-			StartGame();
-			GetElm("prev").addEventListener("click", function listener() {
-				GetElm("prev").removeEventListener("click", listener);
-				Game.FinishTime = 0;
-				ShowMenu();
-			});
-		}
-	}
+	UI.InitCommon(GetElm("song").innerText, ["game", "gameback", "prev"], () => {
+		Game.AutoMode = false;
+		Game.Init();
+	});
+	GetElm("prev").addEventListener("click", function listener() {
+		GetElm("prev").removeEventListener("click", listener);
+		Game.FinishTime = 0;
+		ShowMenu();
+	});
 }
-
-function StartGame() {
-	Game.AutoMode = false;
-	Game.Init();
-}
-function ReflushPreview() {
-	Game.AutoMode = false;
-	Game.Speed = 5000 / parseFloat(GetElm("speed").getAttribute("speed"));//Speed Linked
-	Game.Init();
-	Game.AutoMode = true;
-}
-
 
 function ShowFin() {
+	UI.InitCommon("Result " + Game.Score + "pt", ["fin", "prev"]);
 	GetElm("name").setAttribute("can", "_");
-
 	GetElm("name").innerText = "Enter your name...";
-	UI.ChangeTitle("Result " + Game.Score + "pt");
-	UI.Fadeout(GetElm("menu"));
-	UI.Fadeout(GetElm("game"));
-	UI.Fadeout(GetElm("gameback"));
-	UI.Fadein(GetElm("fin"));
-	UI.ActiveBtn(GetElm("prev"));
-	UI.DeActiveBtn(GetElm("next"));
-	UI.UnBlink(GetElm("next"));
 	GetElm("prev").addEventListener("click", function listener() {
 		GetElm("prev").removeEventListener("click", listener);
 		ShowMenu();
@@ -224,6 +170,8 @@ function AddRanking(A) {
 		});
 	});
 }
+
+
 class Drawing {
 	constructor(canvas, parent) {
 		this.Parent = parent;
@@ -303,10 +251,23 @@ class Drawing {
 	}
 }
 var Game = {
-	_: { Keys: [83, 68, 70, 32, 74, 75, 76], MakingLongKeys: [87, 69, 82, 66, 85, 73, 79], ReadyTime: 1000, BorderY: 0.8, Radius: 1 / 2, MaxScoreLimitGOSA: 50, LimitGOSA: 200, MistakeScore: -100, SECount: 50, SEPath: "Tap.mp3", _FitToKey: 1 },
+	_: { Keys: [83, 68, 70, 32, 74, 75, 76], MakingLongKeys: [87, 69, 82, 66, 85, 73, 79], ReadyTime: 1000, BorderY: 0.8, Radius: 0.5, MaxScoreLimitGOSA: 50, LimitGOSA: 200, MistakeScore: -100, SECount: 50, SEPath: "Tap.mp3", _FitToKey: 1 },
 	Audio: new Audio(),//Overwritten by Init
 	SE: [new Audio()],
-	PlaySE: false,
+	_PlaySE: false,
+	get PlaySE() { return this._PlaySE; },
+	set PlaySE(a) {
+		this._PlaySE = a;
+		if (this._PlaySE) {
+			GetElm("se").classList.remove("unselbtn");
+			GetElm("se").classList.add("selbtn");
+			GetElm("se").innerText = "SE-On";
+		} else {
+			GetElm("se").classList.add("unselbtn");
+			GetElm("se").classList.remove("selbtn");
+			GetElm("se").innerText = "SE-Off";
+		}
+	},
 	FitToKey: false,
 	Draw: undefined,//Overwritten by Game.OnLoad
 	Lines: [{ Color: 0, Light: 0, Nodes: [{ Time: [], _: { Pressed: false } }] }],//Overwritten by Init Time.len==3=> _.KeyDowned:false/true
@@ -315,7 +276,9 @@ var Game = {
 	MusicFile: "",//Overwritten by Init( プレビューへゲームから行くときに音楽が途切れないように)
 	FinishTime: 0,//Overwritten by Init
 	Speed: 5000,/////Overwritten by ReflushPreview
-	Score: 0,//Overwritten by Init
+	_Score: 0,//Overwritten by Init
+	get Score() { return this._Score },
+	set Score(a) { this._Score = a; GetElm("score").innerText = this._Score; },
 	Tickings: 0,
 	Combo: 0,//Overwritten by Init
 	Init: () => {
@@ -332,7 +295,6 @@ var Game = {
 			Game.Audio.currentTime = 0;
 			Game.Audio.playbackRate = 1;
 			Game.Score = 0;
-			Game.UpdateScore();
 			Game.Combo = 0;
 			Game.FinishTime = Infinity;
 			window["NodeText"].split(" ").forEach((word) => {
@@ -500,7 +462,6 @@ var Game = {
 								Math.max(Math.abs(This.Timespan), Game._.MaxScoreLimitGOSA) - Game._.MaxScoreLimitGOSA) / (Game._.LimitGOSA - Game._.MaxScoreLimitGOSA) //0:Good ~ 1:Bad
 								* 0.9 + 0.1 //.1:Good ~ 1:Bad
 								, 2) * 5.1 + 490) << 0;//1000*Combo:Good ~ 500*Combo:Bad
-							Game.UpdateScore();
 							if (Game.FitToKey) {
 								if (Game.Lines[i].Color < 0) {
 									Game._._FitToKey += 0.02;
@@ -513,7 +474,6 @@ var Game = {
 						} else if (!isUp) {
 							Game.Combo = 0;
 							Game.Score += Game._.MistakeScore;
-							Game.UpdateScore();
 						}
 					}
 				}
@@ -657,9 +617,6 @@ var Game = {
 			}
 		}
 		console.log("_");
-	},
-	UpdateScore() {
-		GetElm("score").innerText = Game.Score;
 	}
 }
 var Game_Keyboard_ = {
@@ -672,56 +629,53 @@ var FPS = {
 			if (fps < 45) {
 				if (FPS._dpr > 0.5) {
 					FPS._dpr *= 0.8;
-					FPS._dpr = Math.min(window.devicePixelRatio || 1, Math.max(0.5, FPS._dpr));
+					FPS._dpr = Math.min(window.devicePixelRatio || 1, Math.max(window.devicePixelRatio / 3, FPS._dpr));
 					Game.Draw.ChangeDPR(FPS._dpr);
 				}
 			} if (fps > 45) {
 				if (FPS._dpr < (window.devicePixelRatio || 1)) {
 					FPS._dpr += ((window.devicePixelRatio || 1) - FPS._dpr) / 3 + 0.2;
-					FPS._dpr = Math.min(window.devicePixelRatio || 1, Math.max(0.5, FPS._dpr));
+					FPS._dpr = Math.min(window.devicePixelRatio || 1, Math.max(window.devicePixelRatio / 3, FPS._dpr));
 					Game.Draw.ChangeDPR(FPS._dpr);
 				}
 			}
 		}]
 	},
 	_dpr: window.devicePixelRatio || 1,
-	Prev: 0, FCount: 0, CFPS: 0,
+	Prev: 0, FCount: -1, CFPS: 60,
 	Tick: () => {
+		if (FPS.FCount < 0)
+			FPS.Prev = performance.now();
 		FPS.FCount++;
 		if (FPS.FCount % FPS._.Span == 0) {
 			var now = performance.now();
 			FPS.FCount = 0;
 			FPS.CFPS = (1000 / (now - FPS.Prev) * FPS._.Span) << 0;
 			FPS.Prev = now;
-			FPS._.EventFn.forEach((v) => {
-				v(FPS.CFPS);
-			});
+			FPS._.EventFn.forEach((v) => v(FPS.CFPS));
 		}
 	}
 };
 var UI = {
-	DOMs: {
-		Title: undefined
-	}, Onload: () => {
-		UI.DOMs.Title = GetElm("title");
-	}, ChangeTitle: (text, Fn) => {//WEBKIT ONLY
+	ChangeTitle: (text, Fn) => {//WEBKIT ONLY
 		Fn = Fn || (() => 0);
-		UI.DOMs.Title.addEventListener("webkitAnimationEnd", function listener() {
-			if (UI.DOMs.Title.classList.contains("fading1")) {
-				UI.DOMs.Title.innerText = text;
-				UI.DOMs.Title.classList.remove("fading1");
-				UI.DOMs.Title.classList.add("fading2");
+		let title = GetElm("title");
+		title.addEventListener("webkitAnimationEnd", function listener() {
+			if (title.classList.contains("fading1")) {
+				title.innerText = text;
+				title.classList.remove("fading1");
+				title.classList.add("fading2");
 				setTimeout(() => {
-					UI.DOMs.Title.classList.remove("fading2");
-					UI.DOMs.Title.classList.add("fading3");
+					title.classList.remove("fading2");
+					title.classList.add("fading3");
 				}, 0);
 			} else {
-				UI.DOMs.Title.classList.remove("fading3");
-				UI.DOMs.Title.removeEventListener("webkitAnimationEnd", listener);
+				title.classList.remove("fading3");
+				title.removeEventListener("webkitAnimationEnd", listener);
 				Fn();
 			}
 		});
-		UI.DOMs.Title.classList.add("fading1");
+		title.classList.add("fading1");
 	}, Fadeout: (DOM, Fn) => {
 		Fn = Fn || (() => 0);
 		if (!DOM.classList.contains("fading2")) {
@@ -754,6 +708,26 @@ var UI = {
 		DOM.classList.add("blink");
 	}, UnBlink: (DOM) => {
 		DOM.classList.remove("blink");
+	}, InitCommon: (Title, Opts, Fn) => {//Opt Title menu game gameback fin prev next next-Blink
+		UI.ChangeTitle(Title || "");
+		Fn = Fn || (() => 0);
+		var a = 0;
+		function CountFn() {
+			a++;
+			if (a == 6) Fn();
+		}
+		["menu", "game", "gameback", "fin"].forEach((v) => {
+			if (!(Opts.indexOf(v) < 0)) UI.Fadein(GetElm(v), CountFn);
+			else UI.Fadeout(GetElm(v), CountFn);
+		});
+		["prev", "next"].forEach((v) => {
+			if (!(Opts.indexOf(v) < 0)) UI.ActiveBtn(GetElm(v), CountFn);
+			else UI.DeActiveBtn(GetElm(v), CountFn);
+		});
+		["next"].forEach((v) => {
+			if (!(Opts.indexOf(v + "-Blink") < 0)) UI.Blink(GetElm(v));
+			else UI.UnBlink(GetElm(v));
+		});
 	}
 };
 var Util = {
@@ -820,10 +794,6 @@ window.addEventListener("load", () => {
 	Game.MakingMode = "making" in A;
 	Game.PlaySE = "se" in A;
 	Game.FitToKey = "fit" in A;
-	UI.Onload();
 	Game.OnLoad();
 	Onload();
-
-	UI.Fadein(GetElm("selectsong"));
-	UI.Fadeout(GetElm("detail"));
 });
