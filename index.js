@@ -59,7 +59,7 @@ function ReflushPreview() {
 		UI.ActiveBtn(GetElm("next"));
 		UI.Blink(GetElm("next"));
 		Game.AutoMode = false;
-		Game.Speed = 5000 / parseFloat(GetElm("speed").getAttribute("speed"));//Speed Linked
+		Game.Speed = 3000 / parseFloat(GetElm("speed").getAttribute("speed"));//Speed Linked
 		Game.Init();
 		Game.AutoMode = true;
 	} else {
@@ -289,13 +289,14 @@ var Game = {
 		Game.Nodes = [];
 		Game.Lines = [];
 		Game._.Keys.forEach(() => Game.Lines.push({ Color: 0, Light: 0, Nodes: [] }));
+		if (!Game.AutoMode || window["SongList"][parseInt(GetElm("song").getAttribute("song"), 10)]["Music"] != Game.MusicFile) {
+			Game.MusicFile = window["SongList"][parseInt(GetElm("song").getAttribute("song"), 10)]["Music"];
+			Game.Audio.src = ("musics/" + window["SongList"][parseInt(GetElm("song").getAttribute("song"), 10)]["Music"]);
+		}
 		Util.LoadScript("datas/" + window["SongList"][parseInt(GetElm("song").getAttribute("song"), 10)]["File"] + ".js", () => {
-			if (!Game.AutoMode || window["MusicFile"] != Game.MusicFile) {
-				Game.MusicFile = window["MusicFile"];
-				Game.Audio.src = ("musics/" + window["MusicFile"]);
-			}
 			Game.Audio.currentTime = 0;
-			Game.Audio.playbackRate = 1;
+			if (Game.FitToKey)
+				Game.Audio.playbackRate = 1;
 			Game.Score = 0;
 			Game.Combo = 0;
 			Game.FinishTime = Infinity;
@@ -316,7 +317,17 @@ var Game = {
 			});
 			window["NodeText"] = "";
 			Game.Lines.forEach((line) => { line.Nodes = line.Nodes.sort((a, b) => a.Time[0] - b.Time[0]); });
-			Game.Audio.play();
+			try {
+				Game.Audio.play();
+			} catch (e) {
+				var a = document.createElement('a');
+				a.onclick = () => {
+					Game.Audio.play();
+				}
+				document.body.appendChild(a);
+				a.click();
+				document.body.removeChild(a);
+			}
 			if (Game.Tickings == 0) {
 				Game.Tickings++;
 				Game.Tick();
@@ -533,7 +544,6 @@ var Game = {
 			Game.Audio.currentTime = 0;
 			Game.OnFin();
 		};
-		//Game.Audio.loop = true;
 		Game.Draw = new Drawing(GetElm("c1"), GetElm("game"));
 
 		Game_Keyboard_.Pressed = [];
@@ -618,7 +628,7 @@ var Game = {
 				return;
 			}
 		}
-		console.log("_");
+		console.warn("Need more SE");
 	}
 }
 var Game_Keyboard_ = {
@@ -627,14 +637,14 @@ var Game_Keyboard_ = {
 var Game_Onkey_MakingLong = [];
 var FPS = {
 	_: {
-		Span: 100, EventFn: [(fps) => console.log("FPS: " + fps), (fps) => {
-			if (fps < 45) {
+		Span: 300, EventFn: [(fps) => (fps < 50 ? console.log("FPS<50 " + fps) : 0), (fps) => {
+			if (fps < 40) {
 				if (FPS._dpr > 0.5) {
 					FPS._dpr *= 0.8;
 					FPS._dpr = Math.min(window.devicePixelRatio || 1, Math.max(window.devicePixelRatio / 3, FPS._dpr));
 					Game.Draw.ChangeDPR(FPS._dpr);
 				}
-			} if (fps > 45) {
+			} if (fps > 55) {
 				if (FPS._dpr < (window.devicePixelRatio || 1)) {
 					FPS._dpr += ((window.devicePixelRatio || 1) - FPS._dpr) / 3 + 0.2;
 					FPS._dpr = Math.min(window.devicePixelRatio || 1, Math.max(window.devicePixelRatio / 3, FPS._dpr));
