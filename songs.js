@@ -27,7 +27,6 @@ var SongList = [
 	{
 		Title: "アウターサイエンス",
 		Level: 7,
-		File: "Science-7",
-		Detail: ""
+		File: "Science-7"
 	}
 ];

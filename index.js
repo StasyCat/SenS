@@ -24,6 +24,7 @@ function Onload() {
 		var A = prompt("ランキングへ名前とともに登録できます...");
 		if (A != null) {
 			GetElm("name").setAttribute("can", "#");
+			GetElm("name").innerText = A + " Adding...";
 			AddRanking(A);
 		}
 	});
@@ -140,9 +141,10 @@ function ShowFin() {
 var RankingDatas = [];
 function ReflushRanking() {
 	var DOM = GetElm("rankinglist");
-	DOM.innerHTML = "";
+	DOM.innerText = "Loading...";
 	MyStorage.Get(window["SongList"][parseInt(GetElm("song").getAttribute("song"), 10)]["File"], (datas) => {
-		RankingDatas = datas.sort((a, b) => a.p - b.p);
+		DOM.innerHTML = "";
+		RankingDatas = datas.sort((a, b) => b.p - a.p);
 		RankingDatas.forEach((data, i) => {
 			var LI = document.createElement("li");
 			LI.innerHTML = `<span class="rank">#${i + 1}</span><span class="score">${data.p}pt</span><span class="name">${data.n}</span>`;
@@ -155,12 +157,12 @@ function AddRanking(A) {
 		p: Game.Score,
 		n: A
 	}, () => {
-		GetElm("name").innerText = A + " Added!"
+		GetElm("name").innerText = A + " Added!";
 		RankingDatas.push({
 			p: Game.Score,
 			n: A
 		});
-		RankingDatas = RankingDatas.sort((a, b) => a.p - b.p);
+		RankingDatas = RankingDatas.sort((a, b) => b.p - a.p);
 		var DOM = GetElm("rankinglist");
 		DOM.innerHTML = "";
 		RankingDatas.forEach((data, i) => {
@@ -714,15 +716,15 @@ var UI = {
 		var a = 0;
 		function CountFn() {
 			a++;
-			if (a == 6) Fn();
+			if (a == 4) Fn();
 		}
 		["menu", "game", "gameback", "fin"].forEach((v) => {
 			if (!(Opts.indexOf(v) < 0)) UI.Fadein(GetElm(v), CountFn);
 			else UI.Fadeout(GetElm(v), CountFn);
 		});
 		["prev", "next"].forEach((v) => {
-			if (!(Opts.indexOf(v) < 0)) UI.ActiveBtn(GetElm(v), CountFn);
-			else UI.DeActiveBtn(GetElm(v), CountFn);
+			if (!(Opts.indexOf(v) < 0)) UI.ActiveBtn(GetElm(v));
+			else UI.DeActiveBtn(GetElm(v));
 		});
 		["next"].forEach((v) => {
 			if (!(Opts.indexOf(v + "-Blink") < 0)) UI.Blink(GetElm(v));
@@ -767,21 +769,49 @@ var Util = {
 	}
 }
 var MyStorage = {
+	Cache_Title: undefined,
+	_rank: [],
+	LoadedTitleList(names) {
+		MyStorage.Cache_Title = names.map((v) => decodeURIComponent(v[0]));
+	},
+	LoadedRankList(names) {
+		MyStorage._rank = names.map((v) => JSON.parse(decodeURIComponent(v[0])));
+	},
 	Get: function (FileName, Fn) {
-		if (!localStorage.getItem(FileName))
-			Fn([]);
-		else
-			Fn(JSON.parse(localStorage.getItem(FileName)));
-	}, Add: function (FileName, Data, Fn) {
-		var Prev = [];
-		try {
-			Prev = JSON.parse(localStorage.getItem(FileName));
-		} catch (e) {
-			Prev = [];
+		if (!MyStorage.Cache_Title) {
+			Util.LoadScript("https://script.google.com/macros/s/AKfycbz1JaRk2i_VtBEmFUyyMecyg04kEi2ccXn9rVNxiKQjCufpWlWA/exec?type=GetTitle&prefix=MyStorage.LoadedTitleList", FindAndReturn);
+		} else {
+			FindAndReturn();
 		}
-		Prev.push(Data);
-		localStorage.setItem(FileName, JSON.stringify(Prev));
-		Fn();
+		function FindAndReturn() {
+			var tmp = MyStorage.Cache_Title.findIndex((v) => v == FileName);
+			if (tmp < 0) {
+				Fn([]);
+			} else {
+				Util.LoadScript("https://script.google.com/macros/s/AKfycbz1JaRk2i_VtBEmFUyyMecyg04kEi2ccXn9rVNxiKQjCufpWlWA/exec?ID=" + tmp + "&prefix=MyStorage.LoadedRankList", () => {
+					Fn(MyStorage._rank);
+				});
+			}
+		}
+	}, Add: function (FileName, Data, Fn) {
+		if (!MyStorage.Cache_Title) {
+			Util.LoadScript("https://script.google.com/macros/s/AKfycbz1JaRk2i_VtBEmFUyyMecyg04kEi2ccXn9rVNxiKQjCufpWlWA/exec?type=GetTitle&prefix=MyStorage.LoadedTitleList", FindAndReturn);
+		} else {
+			FindAndReturn();
+		}
+		function FindAndReturn() {
+			var tmp = MyStorage.Cache_Title.findIndex((v) => v == FileName);
+			if (tmp < 0) {
+				MyStorage.Cache_Title.push(encodeURIComponent(FileName));
+				Util.LoadScript("https://script.google.com/macros/s/AKfycbz1JaRk2i_VtBEmFUyyMecyg04kEi2ccXn9rVNxiKQjCufpWlWA/exec?type=AddTitle&Title=" + encodeURIComponent(FileName) + "&Text=" + encodeURIComponent(JSON.stringify(Data)), () => {
+					Fn();
+				});
+			} else {
+				Util.LoadScript("https://script.google.com/macros/s/AKfycbz1JaRk2i_VtBEmFUyyMecyg04kEi2ccXn9rVNxiKQjCufpWlWA/exec?type=AddRank&ID=" + tmp + "&Text=" + encodeURIComponent(JSON.stringify(Data)), () => {
+					Fn();
+				});
+			}
+		}
 	}
 };
 
@@ -796,4 +826,5 @@ window.addEventListener("load", () => {
 	Game.FitToKey = "fit" in A;
 	Game.OnLoad();
 	Onload();
+	Util.LoadScript("https://script.google.com/macros/s/AKfycbz1JaRk2i_VtBEmFUyyMecyg04kEi2ccXn9rVNxiKQjCufpWlWA/exec?type=Count", () => 0);
 });
