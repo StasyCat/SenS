@@ -3,12 +3,16 @@
 //IDEA: 週間ランキングとか
 function GetElm(id) { return document.getElementById(id); }
 function Onload() {
-	GetElm("song").addEventListener("click", () => {
+	GetElm("song").addEventListener("click", (e) => {
+		if (e.preventDefault)
+			e.preventDefault();
 		UI.Fadeout(GetElm("detail"));
 		UI.Fadein(GetElm("selectsong"));
 		ReflushSongList();
 	});
-	GetElm("speed").addEventListener("click", () => {
+	GetElm("speed").addEventListener("click", (e) => {
+		if (e.preventDefault)
+			e.preventDefault();
 		var tmp = parseFloat((prompt("楽譜が落ちるスピードを指定できます(0.5~5.0倍)...") || "").replace(/[^0-9\.]+/g, ""));
 		if (!isNaN(tmp)) {
 			GetElm("speed").innerText = "Speedx" + Math.min(5, Math.max(0.5, ((tmp * 10) << 0) / 10)).toFixed(1);
@@ -16,7 +20,9 @@ function Onload() {
 			ReflushPreview();
 		}
 	});
-	GetElm("name").addEventListener("click", () => {
+	GetElm("name").addEventListener("click", (e) => {
+		if (e.preventDefault)
+			e.preventDefault();
 		if (GetElm("name").getAttribute("can") != "_") {
 			alert("もう追加済みですので追加できないんですよ。まあ、許してやってください");
 			return;
@@ -28,8 +34,15 @@ function Onload() {
 			AddRanking(A);
 		}
 	});
-	GetElm("se").addEventListener("click", () => {
+	GetElm("se").addEventListener("click", (e) => {
+		if (e.preventDefault)
+			e.preventDefault();
 		Game.PlaySE = GetElm("se").classList.contains("unselbtn");
+	});
+	GetElm("line").addEventListener("click", (e) => {
+		if (e.preventDefault)
+			e.preventDefault();
+		Game.ShowLine = GetElm("line").classList.contains("unselbtn");
 	});
 	Util.LoadScript("songs.js", () => {
 		window["SongList"] = window["SongList"].map((v) => {
@@ -46,7 +59,9 @@ function Onload() {
 }
 function ShowMenu() {
 	UI.InitCommon("Song/Speed", ["game", "menu"]);
-	GetElm("next").addEventListener("click", function listener() {
+	GetElm("next").addEventListener("click", function listener(e) {
+		if (e.preventDefault)
+			e.preventDefault();
 		if (GetElm("next").classList.contains("activebtn")) {
 			GetElm("next").removeEventListener("click", listener);
 			ShowGame();
@@ -75,7 +90,9 @@ function ReflushTagList() {
 	Object.keys(Tags).forEach((v) => {
 		var LI = document.createElement("li");
 		LI.innerText = v;
-		LI.addEventListener("click", () => {
+		LI.addEventListener("click", (e) => {
+			if (e.preventDefault)
+				e.preventDefault();
 			if (LI.classList.contains("selbtn"))
 				LI.classList.remove("selbtn");
 			else
@@ -106,7 +123,9 @@ function ReflushSongList() {
 	function AddToDOM(v, i) {
 		var LI = document.createElement("li");
 		LI.innerText = v["Title"];
-		LI.addEventListener("click", () => {
+		LI.addEventListener("click", (e) => {
+			if (e.preventDefault)
+				e.preventDefault();
 			GetElm("song").innerText = v["Title"];
 			GetElm("song").setAttribute("song", i);
 			ReflushPreview();
@@ -121,7 +140,9 @@ function ShowGame() {
 		Game.AutoMode = false;
 		Game.Init();
 	});
-	GetElm("prev").addEventListener("click", function listener() {
+	GetElm("prev").addEventListener("click", function listener(e) {
+		if (e.preventDefault)
+			e.preventDefault();
 		GetElm("prev").removeEventListener("click", listener);
 		Game.FinishTime = 0;
 		ShowMenu();
@@ -132,7 +153,9 @@ function ShowFin() {
 	UI.InitCommon("Result " + Game.Score + "pt", ["fin", "prev"]);
 	GetElm("name").setAttribute("can", "_");
 	GetElm("name").innerText = "Enter your name...";
-	GetElm("prev").addEventListener("click", function listener() {
+	GetElm("prev").addEventListener("click", function listener(e) {
+		if (e.preventDefault)
+			e.preventDefault();
 		GetElm("prev").removeEventListener("click", listener);
 		ShowMenu();
 	});
@@ -214,11 +237,11 @@ class Drawing {
 		this.ctx.beginPath();
 		var Result = Fn();
 		if ("Fill" in Result) {
-			this.ctx.fillStyle = Result["Fill"];
+			if (this.ctx.fillStyle != Result["Fill"]) this.ctx.fillStyle = Result["Fill"];
 			this.ctx.fill();
 		}
 		if ("Stroke" in Result) {
-			this.ctx.strokeStyle = Result["Stroke"];
+			if (this.ctx.strokeStyle != Result["Stroke"]) this.ctx.strokeStyle = Result["Stroke"];
 			this.ctx.stroke();
 		}
 	}
@@ -268,6 +291,20 @@ var Game = {
 			GetElm("se").classList.add("unselbtn");
 			GetElm("se").classList.remove("selbtn");
 			GetElm("se").innerText = "SE-Off";
+		}
+	},
+	_ShowLine: false,
+	get ShowLine() { return this._ShowLine; },
+	set ShowLine(a) {
+		this._ShowLine = a;
+		if (this._ShowLine) {
+			GetElm("line").classList.remove("unselbtn");
+			GetElm("line").classList.add("selbtn");
+			GetElm("line").innerText = "Line-On";
+		} else {
+			GetElm("line").classList.add("unselbtn");
+			GetElm("line").classList.remove("selbtn");
+			GetElm("line").innerText = "Line-Off";
 		}
 	},
 	FitToKey: false,
@@ -320,13 +357,14 @@ var Game = {
 			try {
 				Game.Audio.play();
 			} catch (e) {
-				var a = document.createElement('a');
-				a.onclick = () => {
+				let tmp = GetElm("title").innerText;
+				UI.ChangeTitle("Tap here to start!");
+				GetElm("title").addEventListener("click", (e) => {
+					if (e.preventDefault)
+						e.preventDefault();
+					GetElm("title").innerText = tmp;
 					Game.Audio.play();
-				}
-				document.body.appendChild(a);
-				a.click();
-				document.body.removeChild(a);
+				});
 			}
 			if (Game.Tickings == 0) {
 				Game.Tickings++;
@@ -347,6 +385,9 @@ var Game = {
 		var now = Game.Audio.currentTime * 1000;
 		Game.Draw.ctx.clearRect(0, 0, Game.Draw.Scalex, Game.Draw.Scaley);
 		Game.Draw.ctx.globalCompositeOperation = "lighter";
+		if (Game.ShowLine) Game.Draw.Path(() => {
+			Game.Draw.Line(0, Game._.BorderY, 1, Game._.BorderY);
+		});
 		Game.Lines.forEach((line, i) => {
 			line.Light *= 0.95;
 			line.Color *= 0.95;
@@ -355,7 +396,7 @@ var Game = {
 			var Linex = 1 / Game.Lines.length * (i + 0.5);
 			var Ry = Game._.Radius / Game.Lines.length * (Game.Draw.Scalex > Game.Draw.Scaley ? 1 : Game.Draw.Scalex / Game.Draw.Scaley);
 			Game.Draw.Path(() => {
-				if (i * 2 == Game._.Keys.length - 1) Game.Draw.Line(Linex, 0, Linex, Game._.BorderY - Ry);
+				/*if (i * 2 == Game._.Keys.length - 1)*/ Game.Draw.Line(Linex, 0, Linex, Game._.BorderY - Ry);
 				Game.Draw.Round(Linex, Game._.BorderY, Game._.Radius / Game.Lines.length);
 				return { "Stroke": Color };
 			});
@@ -377,6 +418,10 @@ var Game = {
 							else
 								return { "Fill": ColorOfNode };
 						});
+						if (Game.ShowLine) Game.Draw.Path(() => {
+							Game.Draw.Line(0, y, 1, y);
+							return { "Stroke": ColorOfNode };
+						});
 						break;
 					case 2:
 						var y1 = Math.pow(1 - ((node.Time[0] - now) / Game.Speed), 5) * (Game._.BorderY + Ry) - Ry;//小さい
@@ -394,6 +439,11 @@ var Game = {
 								return { "Stroke": ColorOfNode };
 							else
 								return { "Fill": ColorOfNode };
+						});
+						if (Game.ShowLine) Game.Draw.Path(() => {
+							Game.Draw.Line(0, y1, 1, y1);
+							Game.Draw.Line(0, y2, 1, y2);
+							return { "Stroke": ColorOfNode };
 						});
 						break;
 				}
@@ -610,12 +660,14 @@ var Game = {
 					return false;
 				}
 		}
-		Game.Draw.ctx.canvas.addEventListener('touchstart', function (e) {
+		Game.Draw.ctx.canvas.addEventListener('touchstart', (e) => {
+			e.preventDefault();
 			if (!e) e = window.event;
 			for (let i = 0; i < e.touches.length; i++)
 				Game.OnKey(false, Game._.Keys[(e.touches.item(i).clientX / (Game.Draw.Parent.clientWidth / Game._.Keys.length)) << 0], { Shift: false, Ctrl: false });
 		});
-		Game.Draw.ctx.canvas.addEventListener('touchend', function (e) {
+		Game.Draw.ctx.canvas.addEventListener('touchend', (e) => {
+			e.preventDefault();
 			if (!e) e = window.event;
 			for (let i = 0; i < e.touches.length; i++)
 				Game.OnKey(true, Game._.Keys[(e.touches.item(i).clientX / (Game.Draw.Parent.clientWidth / Game._.Keys.length)) << 0], { Shift: false, Ctrl: false });
