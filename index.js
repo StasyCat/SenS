@@ -131,14 +131,7 @@ function ReflushSongList() {
 			ReflushPreview();
 			UI.Fadeout(GetElm("selectsong"));
 			UI.Fadein(GetElm("detail"));
-			GetElm("prev").addEventListener("click", function listener(e) {
-				if (e.preventDefault)
-					e.preventDefault();
-				GetElm("prev").removeEventListener("click", listener);
-				UI.Fadeout(GetElm("detail"));
-				UI.Fadein(GetElm("selectsong"));
-				ReflushSongList();
-			});
+			UI.ActiveBtn(GetElm("prev"));
 		});
 		GetElm("songlist").appendChild(LI)
 	}
@@ -148,19 +141,20 @@ function ShowGame() {
 		Game.AutoMode = false;
 		Game.Init();
 	});
-	GetElm("prev").addEventListener("click", function listener(e) {
-		if (e.preventDefault)
-			e.preventDefault();
-		GetElm("prev").removeEventListener("click", listener);
-		Game.FinishTime = 0;
-		ShowMenu();
-	});
+	GetElm("prev").addEventListener("click", OnClick_Game_prev);
 }
-
+function OnClick_Game_prev(e) {
+	if (e.preventDefault)
+		e.preventDefault();
+	GetElm("prev").removeEventListener("click", OnClick_Game_prev);
+	Game.FinishTime = 0;
+	ShowMenu();
+}
 function ShowFin() {
-	UI.InitCommon("Result " + Game.Score + "pt", ["fin", "prev"]);
+	UI.InitCommon("Result " + ((this._Score * 1000000 / Game.MaxScore) << 0) / 10000 + "%", ["fin", "prev"]);
 	GetElm("name").setAttribute("can", "_");
 	GetElm("name").innerText = "Enter your name...";
+	GetElm("prev").removeEventListener("click", OnClick_Game_prev);
 	GetElm("prev").addEventListener("click", function listener(e) {
 		if (e.preventDefault)
 			e.preventDefault();
@@ -178,7 +172,7 @@ function ReflushRanking() {
 		RankingDatas = datas.sort((a, b) => b.p - a.p);
 		RankingDatas.forEach((data, i) => {
 			var LI = document.createElement("li");
-			LI.innerHTML = `<span class="rank">#${i + 1}</span><span class="score">${data.p}pt</span><span class="name">${data.n}</span>`;
+			LI.innerHTML = `<span class="rank">#${i + 1}</span><span class="score">${((data.p * 1000000 / Game.MaxScore) << 0) / 10000}pt</span><span class="name">${data.n}</span>`;
 			DOM.appendChild(LI)
 		});
 	});
@@ -198,7 +192,7 @@ function AddRanking(A) {
 		DOM.innerHTML = "";
 		RankingDatas.forEach((data, i) => {
 			var LI = document.createElement("li");
-			LI.innerHTML = `<span class="rank">#${i + 1}</span><span class="score">${data.p}pt</span><span class="name">${data.n}</span>`;
+			LI.innerHTML = `<span class="rank">#${i + 1}</span><span class="score">${((data.p * 1000000 / Game.MaxScore) << 0) / 10000}pt</span><span class="name">${data.n}</span>`;
 			DOM.appendChild(LI)
 		});
 	});
@@ -295,18 +289,18 @@ var Game = {
 			GetElm("se").classList.remove("unselbtn");
 			GetElm("se").classList.add("selbtn");
 			GetElm("se").innerText = "SE-On";
+			if (Game.SE.length == 0) {
+				Game.SE = [];
+				for (let i = 0; i < Game._.SECount; i++) {
+					let audio = new Audio(Game._.SEPath);
+					audio.preload = "auto";
+					Game.SE.push(audio);
+				}
+			}
 		} else {
 			GetElm("se").classList.add("unselbtn");
 			GetElm("se").classList.remove("selbtn");
 			GetElm("se").innerText = "SE-Off";
-		}
-		if (Game.SE.length == 0) {
-			Game.SE = [];
-			for (let i = 0; i < Game._.SECount; i++) {
-				let audio = new Audio(Game._.SEPath);
-				audio.preload = "auto";
-				Game.SE.push(audio);
-			}
 		}
 	},
 	_ShowLine: false,
@@ -331,9 +325,10 @@ var Game = {
 	MusicFile: "",//Overwritten by Init( プレビューへゲームから行くときに音楽が途切れないように)
 	FinishTime: 0,//Overwritten by Init
 	Speed: 5000,/////Overwritten by ReflushPreview
+	MaxScore: 0,//Overwritten by Init
 	_Score: 0,//Overwritten by Init
 	get Score() { return this._Score },
-	set Score(a) { this._Score = a; GetElm("score").innerText = this._Score; },
+	set Score(a) { this._Score = a; GetElm("score").innerText = `${((this._Score * 1000000 / Game.MaxScore) << 0) / 1000000}\n${Game.Combo}`; },
 	Tickings: 0,
 	Combo: 0,//Overwritten by Init
 	Init: () => {
@@ -369,16 +364,29 @@ var Game = {
 				}
 			});
 			window["NodeText"] = "";
+			Game.MaxScore = 0;
+			Game.Lines.forEach((line) => {
+				line.Nodes.forEach((node) => {
+					Game.MaxScore += node.Time.length;
+				})
+			});
+			if (Game.MaxScore < 5) {//ComboMaxによる
+				Game.MaxScore = (Game.MaxScore) * (Game.MaxScore + 1) / 2;
+			} else {
+				Game.MaxScore = Game.MaxScore * 5 - (1 + 2 + 3 + 4);
+			}
+			Game.MaxScore *= 1000;
 			Game.Lines.forEach((line) => { line.Nodes = line.Nodes.sort((a, b) => a.Time[0] - b.Time[0]); });
 			Game.Audio.play();
 			if (Game.Audio.paused) {
 				let tmp = GetElm("title").innerText;
 				UI.ChangeTitle("Tap here to start!");
-				GetElm("title").addEventListener("click", (e) => {
+				GetElm("title").addEventListener("click", function listener(e) {
 					if (e.preventDefault)
 						e.preventDefault();
 					GetElm("title").innerText = tmp;
 					Game.Audio.play();
+					GetElm("title").removeEventListener("click", listener);
 				});
 			}
 			if (Game.Tickings == 0) {
@@ -534,13 +542,14 @@ var Game = {
 									else
 										Game.Lines[i].Nodes[This.ID]._.KeyDowned = true;
 							}
-							Game.Lines[i].Color = Math.sign(This.Timespan) * (Math.max(Math.abs(This.Timespan), Game._.MaxScoreLimitGOSA) - Game._.MaxScoreLimitGOSA) / (Game._.LimitGOSA - Game._.MaxScoreLimitGOSA);
+							Game.Lines[i].Color = Math.sign(Math.sign(This.Timespan) * (Math.max(Math.abs(This.Timespan), Game._.MaxScoreLimitGOSA) - Game._.MaxScoreLimitGOSA));
 							Game.Lines[i].Light = 1;
-							Game.Combo = Math.min(Game.Combo + 1, 5);
-							Game.Score += (Game.Combo / Math.pow((
+							Game.Combo++;
+							Game.Score += (Math.min(Game.Combo + 1, 5) / Math.pow((
 								Math.max(Math.abs(This.Timespan), Game._.MaxScoreLimitGOSA) - Game._.MaxScoreLimitGOSA) / (Game._.LimitGOSA - Game._.MaxScoreLimitGOSA) //0:Good ~ 1:Bad
 								* 0.9 + 0.1 //.1:Good ~ 1:Bad
 								, 2) * 5.1 + 490) << 0;//1000*Combo:Good ~ 500*Combo:Bad
+							//1000が満点でないといけない InitのGame.MaxScoreを計算する都合がある
 							if (Game.FitToKey) {
 								if (Game.Lines[i].Color < 0) {
 									Game._._FitToKey += 0.02;

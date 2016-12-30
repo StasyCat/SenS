@@ -260,21 +260,28 @@
 		<div class="unselbtn" id="line">Line-Off</div>
 		<div id="speed" speed="1">
 			Speedx1.0
-			</div>
+		</div>
 	</div>
 	<div class="grow" id="menubody">
 		<div class="cV fullH fullW scrollY fading2" id="detail">
-			<p class="grow scrollY" id="detailtext">
-				縦に7本レーンがありまして、左から順に、[S] [D] [F] [Space] [J] [K] [L] のキーを押して、落ちてくる譜面を叩いてください。
-			</p>
+			<div class="grow scrollY" id="detailtext">
+				<p>縦に7本レーンがありまして、左から順に、[S] [D] [F] [Space] [J] [K] [L] のキーを押して、落ちてくる譜面を叩いてください。</p>
+				<p>
+					ラインの色には意味があります。
+					<ul>
+						<li>赤 押すタイミングが早すぎる</li>
+						<li>黃 ちょうどいい</li>
+						<li>緑 遅すぎる</li>
+					</ul>
+				</p>
+			</div>
 			<p style="text-align: right;">作成者: 二人ほど。</p>
 </div>
 <div class="fullH fullW cV" id="selectsong">
 	<div class="fullW" id="filter">
 		<span id="tags-name">Loading...</span>
 		<div class="scrollX mL">
-			<ul class="cW fullW grow" id="tags">
-			</ul>
+			<ul class="cW fullW grow" id="tags"></ul>
 		</div>
 	</div>
 	<div class="fullW grow scrollY" id="songs">
