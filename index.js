@@ -131,6 +131,14 @@ function ReflushSongList() {
 			ReflushPreview();
 			UI.Fadeout(GetElm("selectsong"));
 			UI.Fadein(GetElm("detail"));
+			GetElm("prev").addEventListener("click", function listener(e) {
+				if (e.preventDefault)
+					e.preventDefault();
+				GetElm("prev").removeEventListener("click", listener);
+				UI.Fadeout(GetElm("detail"));
+				UI.Fadein(GetElm("selectsong"));
+				ReflushSongList();
+			});
 		});
 		GetElm("songlist").appendChild(LI)
 	}
@@ -276,9 +284,9 @@ class Drawing {
 	}
 }
 var Game = {
-	_: { Keys: [83, 68, 70, 32, 74, 75, 76], MakingLongKeys: [87, 69, 82, 66, 85, 73, 79], ReadyTime: 1000, BorderY: 0.8, Radius: 0.5, MaxScoreLimitGOSA: 50, LimitGOSA: 200, MistakeScore: -100, SECount: 50, SEPath: "Tap.mp3", _FitToKey: 1 },
+	_: { Keys: [83, 68, 70, 32, 74, 75, 76], MakingLongKeys: [87, 69, 82, 66, 85, 73, 79], BorderY: 0.8, Radius: 0.5, MaxScoreLimitGOSA: 50, LimitGOSA: 200, MistakeScore: -100, SECount: 50, SEPath: "Tap.mp3", _FitToKey: 1 },
 	Audio: new Audio(),//Overwritten by Init
-	SE: [new Audio()],
+	SE: [],
 	_PlaySE: false,
 	get PlaySE() { return this._PlaySE; },
 	set PlaySE(a) {
@@ -291,6 +299,14 @@ var Game = {
 			GetElm("se").classList.add("unselbtn");
 			GetElm("se").classList.remove("selbtn");
 			GetElm("se").innerText = "SE-Off";
+		}
+		if (Game.SE.length == 0) {
+			Game.SE = [];
+			for (let i = 0; i < Game._.SECount; i++) {
+				let audio = new Audio(Game._.SEPath);
+				audio.preload = "auto";
+				Game.SE.push(audio);
+			}
 		}
 	},
 	_ShowLine: false,
@@ -354,9 +370,8 @@ var Game = {
 			});
 			window["NodeText"] = "";
 			Game.Lines.forEach((line) => { line.Nodes = line.Nodes.sort((a, b) => a.Time[0] - b.Time[0]); });
-			try {
-				Game.Audio.play();
-			} catch (e) {
+			Game.Audio.play();
+			if (Game.Audio.paused) {
 				let tmp = GetElm("title").innerText;
 				UI.ChangeTitle("Tap here to start!");
 				GetElm("title").addEventListener("click", (e) => {
@@ -387,6 +402,7 @@ var Game = {
 		Game.Draw.ctx.globalCompositeOperation = "lighter";
 		if (Game.ShowLine) Game.Draw.Path(() => {
 			Game.Draw.Line(0, Game._.BorderY, 1, Game._.BorderY);
+			return { "Stroke": `hsl(${Game.Lines[((Game.Lines.length - 1) / 2) << 0].Color * 60 + 60},${Math.min(0.8, Game.Lines[((Game.Lines.length - 1) / 2) << 0].Light) * 100 + 20}%,${Math.min(0.4, Game.Lines[((Game.Lines.length - 1) / 2) << 0].Light) * 25 + 50}%)` };
 		});
 		Game.Lines.forEach((line, i) => {
 			line.Light *= 0.95;
@@ -582,11 +598,6 @@ var Game = {
 		}
 	}, OnLoad: () => {
 		Game.SE = [];
-		for (let i = 0; i < Game._.SECount; i++) {
-			let audio = new Audio(Game._.SEPath);
-			audio.preload = "auto";
-			Game.SE.push(audio);
-		}
 
 		Game.Audio = new Audio();
 		Game.Audio.preload = "auto";
@@ -829,7 +840,7 @@ var Util = {
 			window.requestAnimationFrame = requestAnimationFrame;
 		})();
 	}
-}
+};
 var MyStorage = {
 	Cache_Title: undefined,
 	_rank: [],
@@ -885,6 +896,8 @@ window.addEventListener("load", () => {
 	var A = Util.URLtoObject();
 	Game.MakingMode = "making" in A;
 	Game.PlaySE = "se" in A;
+	Game.ShowLine = "line" in A;
+	if ("speed" in A) Game.Speed = A.speed;
 	Game.FitToKey = "fit" in A;
 	Game.OnLoad();
 	Onload();
