@@ -29,7 +29,7 @@ function Onload() {
 		var tmp = parseFloat((prompt("ゲームを何分間するかを指定できます...") || "").replace(/[^0-9\.]+/g, ""));
 		if (!isNaN(tmp)) {
 			tmp = ((Math.max(1, tmp) * 10) << 0) * 60 / 10 * 1000;
-			Game.UserSettedTime = tmp;
+			Game.Set_UserSettedTime(tmp);
 		}
 	});
 	GetElm("name").addEventListener("click", (e) => {
@@ -49,12 +49,12 @@ function Onload() {
 	GetElm("se").addEventListener("click", (e) => {
 		if (e.preventDefault)
 			e.preventDefault();
-		Game.PlaySE = GetElm("se").classList.contains("unselbtn");
+		Game.Set_PlaySE(GetElm("se").classList.contains("unselbtn"));
 	});
 	GetElm("line").addEventListener("click", (e) => {
 		if (e.preventDefault)
 			e.preventDefault();
-		Game.ShowLine = GetElm("line").classList.contains("unselbtn");
+		Game.Set_ShowLine(GetElm("line").classList.contains("unselbtn"));
 	});
 	Util.LoadScript("songs.js", () => {
 		window["SongList"] = window["SongList"].map((v) => {
@@ -316,13 +316,10 @@ var Game = {
 	},
 	Audio: new Audio(), //Overwritten by Init
 	SE: [],
-	_PlaySE: false,
-	get PlaySE() {
-		return this._PlaySE;
-	},
-	set PlaySE(a) {
-		this._PlaySE = a;
-		if (this._PlaySE) {
+	PlaySE: false, //DO NOT SET
+	Set_PlaySE: (a) => {
+		Game.PlaySE = a;
+		if (a) {
 			GetElm("se").classList.remove("unselbtn");
 			GetElm("se").classList.add("selbtn");
 			GetElm("se").innerText = "SE-O";
@@ -340,13 +337,10 @@ var Game = {
 			GetElm("se").innerText = "SE-X";
 		}
 	},
-	_ShowLine: false,
-	get ShowLine() {
-		return this._ShowLine;
-	},
-	set ShowLine(a) {
-		this._ShowLine = a;
-		if (this._ShowLine) {
+	ShowLine: false,
+	Set_ShowLine(a) {
+		Game._ShowLine = a;
+		if (a) {
 			GetElm("line").classList.remove("unselbtn");
 			GetElm("line").classList.add("selbtn");
 			GetElm("line").innerText = "Line-O";
@@ -372,24 +366,17 @@ var Game = {
 	AutoMode: false,
 	MusicFile: "", //Overwritten by Init( プレビューへゲームから行くときに音楽が途切れないように)
 	FinishTime: 0, //Overwritten by Init
-	_UserSettedTime: Infinity,
-	get UserSettedTime() {
-		return this._UserSettedTime
-	},
-	set UserSettedTime(a) {
-		this._UserSettedTime = a;
+	UserSettedTime: Infinity,
+	Set_UserSettedTime(a) {
+		Game.UserSettedTime = a;
 		GetElm("min").innerText = (a / 60000).toFixed(1) + "min";
 	},
 	Speed: 5000, /////Overwritten by ReflushPreview
 	MaxScore: 0, //Overwritten by Init
-	_Score: 0, //Overwritten by Init
-	get Score() {
-		return this._Score
-	},
-	set Score(a) {
-		console.log(a - this._Score);
-		this._Score = a;
-		GetElm("score").innerText = `${((this._Score * 1000000 / Game.MaxScore) << 0) / 10000}pt\n${Game.Combo}combo`
+	Score: 0, //Overwritten by Init
+	Set_Score(a) {
+		Game.Score = a;
+		GetElm("score").innerText = `${((a* 1000000 / Game.MaxScore) << 0) / 10000}pt\n${Game.Combo}combo`
 	},
 	Tickings: 0,
 	Combo: 0, //Overwritten by Init
@@ -411,7 +398,7 @@ var Game = {
 			Game.Audio.currentTime = 0;
 			if (Game.FitToKey)
 				Game.Audio.playbackRate = 1;
-			Game.Score = 0;
+			Game.Set_Score(0);
 			Game.Combo = 0;
 			Game.FinishTime = Infinity;
 			window["NodeText"].split(" ").forEach((word) => {
@@ -684,13 +671,13 @@ var Game = {
 							Game.Lines[i].Color = Math.sign(Math.sign(This.Timespan) * (Math.max(Math.abs(This.Timespan), Game._.MaxScoreLimitGOSA) - Game._.MaxScoreLimitGOSA));
 							Game.Lines[i].Light = 1;
 							Game.Combo++;
-							Game.Score += Math.min(Game.Combo + 1, 5) * ((1 / Math.pow(
+							Game.Set_Score(Game.Score + Math.min(Game.Combo + 1, 5) * ((1 / Math.pow(
 									(Math.max(Math.abs(This.Timespan), Game._.MaxScoreLimitGOSA) - Game._.MaxScoreLimitGOSA) / (Game._.LimitGOSA - Game._.MaxScoreLimitGOSA) //0:Good ~ 1:Bad
 									*
 									0.5 + 0.5 //.5:Good ~ 1:Bad
 									, 2) //4Good 1Bad
 								-
-								1) / 3 * 500 + 500) << 0; //1000*Combo:Good ~ 500*Combo:Bad
+								1) / 3 * 500 + 500) << 0); //1000*Combo:Good ~ 500*Combo:Bad
 							//1000が満点でないといけない InitのGame.MaxScoreを計算する都合がある
 							if (Game.FitToKey) {
 								if (Game.Lines[i].Color < 0) {
@@ -703,7 +690,7 @@ var Game = {
 							}
 						} else if (!isUp) {
 							Game.Combo = 0;
-							Game.Score += Game._.MistakeScore;
+							Game.Set_Score(Game.Score + Game._.MistakeScore);
 						}
 					}
 				}
@@ -1102,8 +1089,8 @@ window.addEventListener("load", () => {
 	} catch (e) {}
 	var A = Util.URLtoObject();
 	Game.MakingMode = "making" in A;
-	Game.PlaySE = "se" in A;
-	Game.ShowLine = "line" in A;
+	Game.Set_PlaySE("se" in A);
+	Game.Set_ShowLine("line" in A);
 	if ("speed" in A) Game.Speed = A.speed;
 	Game.FitToKey = "fit" in A;
 	Game.OnLoad();
