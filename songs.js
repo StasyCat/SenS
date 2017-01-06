@@ -1,9 +1,8 @@
-var SongList = [
-	{
+var SongList = [{
 		Title: "ロストワンの号哭",
 		Level: 4,
 		File: "LostOne-4",
-		Music:"LostOne.mp3"
+		Music: "LostOne.mp3"
 	},
 	{
 		Title: "ロストワンの号哭",

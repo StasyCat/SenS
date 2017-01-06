@@ -1,7 +1,10 @@
 "use strict";
 //WEBKIT ONLY
 //IDEA: 週間ランキングとか
-function GetElm(id) { return document.getElementById(id); }
+function GetElm(id) {
+	return document.getElementById(id);
+}
+
 function Onload() {
 	GetElm("song").addEventListener("click", (e) => {
 		if (e.preventDefault)
@@ -18,6 +21,15 @@ function Onload() {
 			GetElm("speed").innerText = "Speedx" + Math.min(5, Math.max(0.5, ((tmp * 10) << 0) / 10)).toFixed(1);
 			GetElm("speed").setAttribute("speed", "" + Math.min(5, Math.max(0.5, ((tmp * 10) << 0) / 10)));
 			ReflushPreview();
+		}
+	});
+	GetElm("min").addEventListener("click", (e) => {
+		if (e.preventDefault)
+			e.preventDefault();
+		var tmp = parseFloat((prompt("ゲームを何分間するかを指定できます...") || "").replace(/[^0-9\.]+/g, ""));
+		if (!isNaN(tmp)) {
+			tmp = ((Math.max(1, tmp) * 10) << 0) * 60 / 10 * 1000;
+			Game.UserSettedTime = tmp;
 		}
 	});
 	GetElm("name").addEventListener("click", (e) => {
@@ -57,6 +69,7 @@ function Onload() {
 		ShowMenu();
 	}, 500);
 }
+
 function ShowMenu() {
 	UI.InitCommon("Song/Speed", ["game", "menu"]);
 	GetElm("next").addEventListener("click", function listener(e) {
@@ -69,18 +82,20 @@ function ShowMenu() {
 	});
 	ReflushPreview();
 }
+
 function ReflushPreview() {
 	if (GetElm("song").getAttribute("song") != "_") {
 		UI.ActiveBtn(GetElm("next"));
 		UI.Blink(GetElm("next"));
 		Game.AutoMode = false;
-		Game.Speed = 3000 / parseFloat(GetElm("speed").getAttribute("speed"));//Speed Linked
+		Game.Speed = 3000 / parseFloat(GetElm("speed").getAttribute("speed")); //Speed Linked
 		Game.Init();
 		Game.AutoMode = true;
 	} else {
 		UI.DeActiveBtn(GetElm("next"));
 	}
 }
+
 function ReflushTagList() {
 	GetElm("tags").innerHTML = "";
 	var Tags = {};
@@ -103,6 +118,7 @@ function ReflushTagList() {
 	});
 	GetElm("tags-name").innerText = "Level";
 }
+
 function ReflushSongList() {
 	var Tags = GetElm("tags").children;
 	var ActiveTags = [];
@@ -131,11 +147,11 @@ function ReflushSongList() {
 			ReflushPreview();
 			UI.Fadeout(GetElm("selectsong"));
 			UI.Fadein(GetElm("detail"));
-			UI.ActiveBtn(GetElm("prev"));
 		});
 		GetElm("songlist").appendChild(LI)
 	}
 }
+
 function ShowGame() {
 	UI.InitCommon(GetElm("song").innerText, ["game", "gameback", "prev"], () => {
 		Game.AutoMode = false;
@@ -143,15 +159,17 @@ function ShowGame() {
 	});
 	GetElm("prev").addEventListener("click", OnClick_Game_prev);
 }
+
 function OnClick_Game_prev(e) {
 	if (e.preventDefault)
 		e.preventDefault();
 	GetElm("prev").removeEventListener("click", OnClick_Game_prev);
-	Game.FinishTime = 0;
+	Game.Audio.currentTime = Game.Audio.duration;
 	ShowMenu();
 }
+
 function ShowFin() {
-	UI.InitCommon("Result " + ((this._Score * 1000000 / Game.MaxScore) << 0) / 10000 + "%", ["fin", "prev"]);
+	UI.InitCommon("Result " + ((Game.Score * 1000000 / Game.MaxScore) << 0) / 10000 + "pt", ["fin", "prev"]);
 	GetElm("name").setAttribute("can", "_");
 	GetElm("name").innerText = "Enter your name...";
 	GetElm("prev").removeEventListener("click", OnClick_Game_prev);
@@ -164,6 +182,7 @@ function ShowFin() {
 	ReflushRanking();
 }
 var RankingDatas = [];
+
 function ReflushRanking() {
 	var DOM = GetElm("rankinglist");
 	DOM.innerText = "Loading...";
@@ -172,27 +191,30 @@ function ReflushRanking() {
 		RankingDatas = datas.sort((a, b) => b.p - a.p);
 		RankingDatas.forEach((data, i) => {
 			var LI = document.createElement("li");
-			LI.innerHTML = `<span class="rank">#${i + 1}</span><span class="score">${((data.p * 1000000 / Game.MaxScore) << 0) / 10000}pt</span><span class="name">${data.n}</span>`;
+			LI.innerHTML = `<span class="rank">#${i + 1}</span><span class="score">${data.p / 10000}pt</span><span class="name">${data.n}</span>`;
 			DOM.appendChild(LI)
 		});
 	});
 }
+
 function AddRanking(A) {
 	MyStorage.Add(window["SongList"][parseInt(GetElm("song").getAttribute("song"), 10)]["File"], {
-		p: Game.Score,
-		n: A
+		p: (Game.Score * 1000000 / Game.MaxScore) << 0,
+		n: A,
+		t: Game.UserSettedTime
 	}, () => {
 		GetElm("name").innerText = A + " Added!";
 		RankingDatas.push({
-			p: Game.Score,
-			n: A
+			p: (Game.Score * 1000000 / Game.MaxScore) << 0,
+			n: A,
+			t: Game.UserSettedTime
 		});
 		RankingDatas = RankingDatas.sort((a, b) => b.p - a.p);
 		var DOM = GetElm("rankinglist");
 		DOM.innerHTML = "";
 		RankingDatas.forEach((data, i) => {
 			var LI = document.createElement("li");
-			LI.innerHTML = `<span class="rank">#${i + 1}</span><span class="score">${((data.p * 1000000 / Game.MaxScore) << 0) / 10000}pt</span><span class="name">${data.n}</span>`;
+			LI.innerHTML = `<span class="rank">#${i + 1}</span><span class="score">${data.p / 10000}pt</span><span class="time">${(data.t/60).toFixed(1)}min</span><span class="name">${data.n}</span>`;
 			DOM.appendChild(LI)
 		});
 	});
@@ -210,7 +232,9 @@ class Drawing {
 		((Fn) => {
 			var i = false;
 			window.addEventListener('resize', () => {
-				if (i !== false) { clearTimeout(i); }
+				if (i !== false) {
+					clearTimeout(i);
+				}
 				i = setTimeout(Fn, 100);
 			});
 		})(() => this.OnResize.call(This));
@@ -278,17 +302,30 @@ class Drawing {
 	}
 }
 var Game = {
-	_: { Keys: [83, 68, 70, 32, 74, 75, 76], MakingLongKeys: [87, 69, 82, 66, 85, 73, 79], BorderY: 0.8, Radius: 0.5, MaxScoreLimitGOSA: 50, LimitGOSA: 200, MistakeScore: -100, SECount: 50, SEPath: "Tap.mp3", _FitToKey: 1 },
-	Audio: new Audio(),//Overwritten by Init
+	_: {
+		Keys: [83, 68, 70, 32, 74, 75, 76],
+		MakingLongKeys: [87, 69, 82, 66, 85, 73, 79],
+		BorderY: 0.8,
+		Radius: 0.5,
+		MaxScoreLimitGOSA: 50,
+		LimitGOSA: 200,
+		MistakeScore: -100,
+		SECount: 50,
+		SEPath: "Tap.mp3",
+		_FitToKey: 1
+	},
+	Audio: new Audio(), //Overwritten by Init
 	SE: [],
 	_PlaySE: false,
-	get PlaySE() { return this._PlaySE; },
+	get PlaySE() {
+		return this._PlaySE;
+	},
 	set PlaySE(a) {
 		this._PlaySE = a;
 		if (this._PlaySE) {
 			GetElm("se").classList.remove("unselbtn");
 			GetElm("se").classList.add("selbtn");
-			GetElm("se").innerText = "SE-On";
+			GetElm("se").innerText = "SE-O";
 			if (Game.SE.length == 0) {
 				Game.SE = [];
 				for (let i = 0; i < Game._.SECount; i++) {
@@ -300,43 +337,72 @@ var Game = {
 		} else {
 			GetElm("se").classList.add("unselbtn");
 			GetElm("se").classList.remove("selbtn");
-			GetElm("se").innerText = "SE-Off";
+			GetElm("se").innerText = "SE-X";
 		}
 	},
 	_ShowLine: false,
-	get ShowLine() { return this._ShowLine; },
+	get ShowLine() {
+		return this._ShowLine;
+	},
 	set ShowLine(a) {
 		this._ShowLine = a;
 		if (this._ShowLine) {
 			GetElm("line").classList.remove("unselbtn");
 			GetElm("line").classList.add("selbtn");
-			GetElm("line").innerText = "Line-On";
+			GetElm("line").innerText = "Line-O";
 		} else {
 			GetElm("line").classList.add("unselbtn");
 			GetElm("line").classList.remove("selbtn");
-			GetElm("line").innerText = "Line-Off";
+			GetElm("line").innerText = "Line-X";
 		}
 	},
 	FitToKey: false,
-	Draw: undefined,//Overwritten by Game.OnLoad
-	Lines: [{ Color: 0, Light: 0, Nodes: [{ Time: [], _: { Pressed: false } }] }],//Overwritten by Init Time.len==3=> _.KeyDowned:false/true
-	MakingMode: false,//Trueのとき、Lines.Nodesがsortされているとは限らない
+	Draw: undefined, //Overwritten by Game.OnLoad
+	Lines: [{
+		Color: 0,
+		Light: 0,
+		Nodes: [{
+			Time: [],
+			_: {
+				Pressed: false
+			}
+		}]
+	}], //Overwritten by Init Time.len==3=> _.KeyDowned:false/true
+	MakingMode: false, //Trueのとき、Lines.Nodesがsortされているとは限らない
 	AutoMode: false,
-	MusicFile: "",//Overwritten by Init( プレビューへゲームから行くときに音楽が途切れないように)
-	FinishTime: 0,//Overwritten by Init
-	Speed: 5000,/////Overwritten by ReflushPreview
-	MaxScore: 0,//Overwritten by Init
-	_Score: 0,//Overwritten by Init
-	get Score() { return this._Score },
-	set Score(a) { this._Score = a; GetElm("score").innerText = `${((this._Score * 1000000 / Game.MaxScore) << 0) / 1000000}\n${Game.Combo}`; },
+	MusicFile: "", //Overwritten by Init( プレビューへゲームから行くときに音楽が途切れないように)
+	FinishTime: 0, //Overwritten by Init
+	_UserSettedTime: Infinity,
+	get UserSettedTime() {
+		return this._UserSettedTime
+	},
+	set UserSettedTime(a) {
+		this._UserSettedTime = a;
+		GetElm("min").innerText = (a / 60000).toFixed(1) + "min";
+	},
+	Speed: 5000, /////Overwritten by ReflushPreview
+	MaxScore: 0, //Overwritten by Init
+	_Score: 0, //Overwritten by Init
+	get Score() {
+		return this._Score
+	},
+	set Score(a) {
+		console.log(a - this._Score);
+		this._Score = a;
+		GetElm("score").innerText = `${((this._Score * 1000000 / Game.MaxScore) << 0) / 10000}pt\n${Game.Combo}combo`
+	},
 	Tickings: 0,
-	Combo: 0,//Overwritten by Init
+	Combo: 0, //Overwritten by Init
 	Init: () => {
 		Game.Nodes = undefined;
 		Game.Lines = undefined;
 		Game.Nodes = [];
 		Game.Lines = [];
-		Game._.Keys.forEach(() => Game.Lines.push({ Color: 0, Light: 0, Nodes: [] }));
+		Game._.Keys.forEach(() => Game.Lines.push({
+			Color: 0,
+			Light: 0,
+			Nodes: []
+		}));
 		if (!Game.AutoMode || window["SongList"][parseInt(GetElm("song").getAttribute("song"), 10)]["Music"] != Game.MusicFile) {
 			Game.MusicFile = window["SongList"][parseInt(GetElm("song").getAttribute("song"), 10)]["Music"];
 			Game.Audio.src = ("musics/" + window["SongList"][parseInt(GetElm("song").getAttribute("song"), 10)]["Music"]);
@@ -356,13 +422,30 @@ var Game = {
 							Game.FinishTime = tmp[0];
 						break;
 					case 2:
-						Game.Lines[tmp[0]].Nodes.push({ Time: tmp.slice(1), _: { Pressed: false } });
+						Game.Lines[tmp[0]].Nodes.push({
+							Time: tmp.slice(1),
+							_: {
+								Pressed: false
+							}
+						});
 						break;
 					case 3:
-						Game.Lines[tmp[0]].Nodes.push({ Time: tmp.slice(1), _: { Pressed: false, KeyDowned: false } });
+						Game.Lines[tmp[0]].Nodes.push({
+							Time: tmp.slice(1),
+							_: {
+								Pressed: false,
+								KeyDowned: false
+							}
+						});
 						break;
 				}
 			});
+			if (Game.FinishTime > Game.UserSettedTime) {
+				Game.FinishTime = Game.UserSettedTime;
+				Game.Lines.forEach((line) => {
+					line.Nodes = line.Nodes.filter((v) => v.Time[0] < Game.FinishTime);
+				});
+			}
 			window["NodeText"] = "";
 			Game.MaxScore = 0;
 			Game.Lines.forEach((line) => {
@@ -370,23 +453,37 @@ var Game = {
 					Game.MaxScore += node.Time.length;
 				})
 			});
-			if (Game.MaxScore < 5) {//ComboMaxによる
+			if (Game.MaxScore < 5) { //ComboMaxによる
 				Game.MaxScore = (Game.MaxScore) * (Game.MaxScore + 1) / 2;
 			} else {
 				Game.MaxScore = Game.MaxScore * 5 - (1 + 2 + 3 + 4);
 			}
 			Game.MaxScore *= 1000;
-			Game.Lines.forEach((line) => { line.Nodes = line.Nodes.sort((a, b) => a.Time[0] - b.Time[0]); });
+			Game.Lines.forEach((line) => {
+				line.Nodes = line.Nodes.sort((a, b) => a.Time[0] - b.Time[0]);
+			});
 			Game.Audio.play();
 			if (Game.Audio.paused) {
 				let tmp = GetElm("title").innerText;
-				UI.ChangeTitle("Tap here to start!");
+				UI.ChangeTitle("Tap here!");
 				GetElm("title").addEventListener("click", function listener(e) {
 					if (e.preventDefault)
 						e.preventDefault();
-					GetElm("title").innerText = tmp;
+					GetElm("title").innerText = "loading...";
 					Game.Audio.play();
 					GetElm("title").removeEventListener("click", listener);
+					Game.Audio.addEventListener("loadeddata", function listener() {
+						GetElm("title").innerText = tmp;
+						Game.Audio.removeEventListener("loadeddata", listener);
+					});
+				});
+			} else {
+				let tmp = GetElm("title").innerText;
+				GetElm("title").innerText = "loading...";
+				Game.Audio.play();
+				Game.Audio.addEventListener("loadeddata", function listener() {
+					GetElm("title").innerText = tmp;
+					Game.Audio.removeEventListener("loadeddata", listener);
 				});
 			}
 			if (Game.Tickings == 0) {
@@ -394,7 +491,8 @@ var Game = {
 				Game.Tick();
 			}
 		});
-	}, Tick: () => {
+	},
+	Tick: () => {
 		if (Game.Tickings > 1) {
 			Game.Tickings--;
 			return;
@@ -410,7 +508,9 @@ var Game = {
 		Game.Draw.ctx.globalCompositeOperation = "lighter";
 		if (Game.ShowLine) Game.Draw.Path(() => {
 			Game.Draw.Line(0, Game._.BorderY, 1, Game._.BorderY);
-			return { "Stroke": `hsl(${Game.Lines[((Game.Lines.length - 1) / 2) << 0].Color * 60 + 60},${Math.min(0.8, Game.Lines[((Game.Lines.length - 1) / 2) << 0].Light) * 100 + 20}%,${Math.min(0.4, Game.Lines[((Game.Lines.length - 1) / 2) << 0].Light) * 25 + 50}%)` };
+			return {
+				"Stroke": `hsl(${Game.Lines[((Game.Lines.length - 1) / 2) << 0].Color * 60 + 60},${Math.min(0.8, Game.Lines[((Game.Lines.length - 1) / 2) << 0].Light) * 100 + 20}%,${Math.min(0.4, Game.Lines[((Game.Lines.length - 1) / 2) << 0].Light) * 25 + 50}%)`
+			};
 		});
 		Game.Lines.forEach((line, i) => {
 			line.Light *= 0.95;
@@ -420,9 +520,12 @@ var Game = {
 			var Linex = 1 / Game.Lines.length * (i + 0.5);
 			var Ry = Game._.Radius / Game.Lines.length * (Game.Draw.Scalex > Game.Draw.Scaley ? 1 : Game.Draw.Scalex / Game.Draw.Scaley);
 			Game.Draw.Path(() => {
-				/*if (i * 2 == Game._.Keys.length - 1)*/ Game.Draw.Line(Linex, 0, Linex, Game._.BorderY - Ry);
+				/*if (i * 2 == Game._.Keys.length - 1)*/
+				Game.Draw.Line(Linex, 0, Linex, Game._.BorderY - Ry);
 				Game.Draw.Round(Linex, Game._.BorderY, Game._.Radius / Game.Lines.length);
-				return { "Stroke": Color };
+				return {
+					"Stroke": Color
+				};
 			});
 			line.Nodes.some((node) => {
 				switch (node.Time.length) {
@@ -438,18 +541,24 @@ var Game = {
 						Game.Draw.Path(() => {
 							Game.Draw.Round(Linex, y, Game._.Radius / Game.Lines.length);
 							if (node._.Pressed)
-								return { "Stroke": ColorOfNode };
+								return {
+									"Stroke": ColorOfNode
+								};
 							else
-								return { "Fill": ColorOfNode };
+								return {
+									"Fill": ColorOfNode
+								};
 						});
 						if (Game.ShowLine) Game.Draw.Path(() => {
 							Game.Draw.Line(0, y, 1, y);
-							return { "Stroke": ColorOfNode };
+							return {
+								"Stroke": ColorOfNode
+							};
 						});
 						break;
 					case 2:
-						var y1 = Math.pow(1 - ((node.Time[0] - now) / Game.Speed), 5) * (Game._.BorderY + Ry) - Ry;//小さい
-						var y2 = Math.pow(1 - ((node.Time[1] - now) / Game.Speed), 5) * (Game._.BorderY + Ry) - Ry;//大きい
+						var y1 = Math.pow(1 - ((node.Time[0] - now) / Game.Speed), 5) * (Game._.BorderY + Ry) - Ry; //小さい
+						var y2 = Math.pow(1 - ((node.Time[1] - now) / Game.Speed), 5) * (Game._.BorderY + Ry) - Ry; //大きい
 						if (y1 < -Ry) return !Game.MakingMode;
 						if (y2 > 1 + Ry) return false;
 						if (y2 > Game._.BorderY && Game.AutoMode && !node._.Pressed) {
@@ -460,14 +569,20 @@ var Game = {
 						Game.Draw.Path(() => {
 							Game.Draw.LongRound(Linex, y2, y1 - y2, Game._.Radius / Game.Lines.length);
 							if (node._.Pressed)
-								return { "Stroke": ColorOfNode };
+								return {
+									"Stroke": ColorOfNode
+								};
 							else
-								return { "Fill": ColorOfNode };
+								return {
+									"Fill": ColorOfNode
+								};
 						});
 						if (Game.ShowLine) Game.Draw.Path(() => {
 							Game.Draw.Line(0, y1, 1, y1);
 							Game.Draw.Line(0, y2, 1, y2);
-							return { "Stroke": ColorOfNode };
+							return {
+								"Stroke": ColorOfNode
+							};
 						});
 						break;
 				}
@@ -475,14 +590,16 @@ var Game = {
 			});
 		});
 		requestAnimationFrame(Game.Tick);
-	}, OnKey: (isUp, Key, Other) => {
+	},
+	OnKey: (isUp, Key, Other) => {
 		if (Game.AutoMode) return;
 		var now = Game.Audio.currentTime * 1000;
-		if (Key == 78) {//N: Pause
+		if (Key == 78) { //N: Pause
 			if (isUp) return;
 			Game.Audio.pause();
 			return;
-		} if (Key == 77) {//M: Restart
+		}
+		if (Key == 77) { //M: Restart
 			if (isUp) return;
 			Game.Audio.play();
 			return;
@@ -492,24 +609,43 @@ var Game = {
 			if (key == Key) {
 				if (Game.MakingMode && Other.Ctrl) {
 					if (!isUp) {
-						var This = { ID: -1, Timespan: Infinity };//Timespan: now-node[0]
+						var This = {
+							ID: -1,
+							Timespan: Infinity
+						}; //Timespan: now-node[0]
 						Game.Lines[0].Nodes.forEach((node, i) => {
 							if (node._.Pressed && node.Time.length == 1)
 								if (Math.abs(now - node.Time[0]) < Math.abs(This.Timespan))
-									This = { ID: i, Timespan: now - node.Time[0] };
+									This = {
+										ID: i,
+										Timespan: now - node.Time[0]
+									};
 						});
 						if (This.ID >= 0) {
-							Game.Lines[i].Nodes.push({ Time: [Game.Lines[0].Nodes[This.ID].Time[0]], _: { Pressed: false } });
+							Game.Lines[i].Nodes.push({
+								Time: [Game.Lines[0].Nodes[This.ID].Time[0]],
+								_: {
+									Pressed: false
+								}
+							});
 							if (Other.Shift)
 								Game.Lines[0].Nodes.splice(This.ID, 1);
 						}
 					}
-				} else if (Game.MakingMode && !Other.Shift) {//-Shift -Ctrl
+				} else if (Game.MakingMode && !Other.Shift) { //-Shift -Ctrl
 					if (!isUp) {
-						Game.Lines[i].Nodes.push({ Time: [now << 0], _: { Pressed: false } });
+						Game.Lines[i].Nodes.push({
+							Time: [now << 0],
+							_: {
+								Pressed: false
+							}
+						});
 					}
 				} else {
-					var This = { ID: -1, Timespan: Infinity };//Timespan: now-node[0]
+					var This = {
+						ID: -1,
+						Timespan: Infinity
+					}; //Timespan: now-node[0]
 					Game.Lines[i].Nodes.forEach((node, i) => {
 						var span = Infinity;
 						switch (node.Time.length) {
@@ -526,10 +662,13 @@ var Game = {
 								break;
 						}
 						if (Math.abs(span) < Math.abs(This.Timespan))
-							This = { ID: i, Timespan: span };
+							This = {
+								ID: i,
+								Timespan: span
+							};
 					});
 
-					if (Game.MakingMode) {//Shift -Ctrl
+					if (Game.MakingMode) { //Shift -Ctrl
 						if (This.ID >= 0 && !isUp) Game.Lines[i].Nodes.splice(This.ID, 1);
 					} else {
 						if (This.ID >= 0 && Math.abs(This.Timespan) < Game._.LimitGOSA) {
@@ -545,10 +684,13 @@ var Game = {
 							Game.Lines[i].Color = Math.sign(Math.sign(This.Timespan) * (Math.max(Math.abs(This.Timespan), Game._.MaxScoreLimitGOSA) - Game._.MaxScoreLimitGOSA));
 							Game.Lines[i].Light = 1;
 							Game.Combo++;
-							Game.Score += (Math.min(Game.Combo + 1, 5) / Math.pow((
-								Math.max(Math.abs(This.Timespan), Game._.MaxScoreLimitGOSA) - Game._.MaxScoreLimitGOSA) / (Game._.LimitGOSA - Game._.MaxScoreLimitGOSA) //0:Good ~ 1:Bad
-								* 0.9 + 0.1 //.1:Good ~ 1:Bad
-								, 2) * 5.1 + 490) << 0;//1000*Combo:Good ~ 500*Combo:Bad
+							Game.Score += Math.min(Game.Combo + 1, 5) * ((1 / Math.pow(
+									(Math.max(Math.abs(This.Timespan), Game._.MaxScoreLimitGOSA) - Game._.MaxScoreLimitGOSA) / (Game._.LimitGOSA - Game._.MaxScoreLimitGOSA) //0:Good ~ 1:Bad
+									*
+									0.5 + 0.5 //.5:Good ~ 1:Bad
+									, 2) //4Good 1Bad
+								-
+								1) / 3 * 500 + 500) << 0; //1000*Combo:Good ~ 500*Combo:Bad
 							//1000が満点でないといけない InitのGame.MaxScoreを計算する都合がある
 							if (Game.FitToKey) {
 								if (Game.Lines[i].Color < 0) {
@@ -572,7 +714,13 @@ var Game = {
 			Found = Game._.MakingLongKeys.some((key, i) => {
 				if (key == Key) {
 					if (!isUp) {
-						Game.Lines[i].Nodes.push({ Time: [now << 0, (now + 10000) << 0], _: { Pressed: false, KeyDowned: false } });
+						Game.Lines[i].Nodes.push({
+							Time: [now << 0, (now + 10000) << 0],
+							_: {
+								Pressed: false,
+								KeyDowned: false
+							}
+						});
 						Game_Onkey_MakingLong[i] = Game.Lines[i].Nodes.length - 1;
 					} else {
 						Game.Lines[i].Nodes[Game_Onkey_MakingLong[i]].Time[1] = now << 0;
@@ -580,32 +728,45 @@ var Game = {
 					return true;
 				}
 			});
-			if (!Found) {//Press other keys => timing assist
+			if (!Found) { //Press other keys => timing assist
 				if (isUp) return;
 				if (Other.Shift) {
-					var This = { ID: -1, Timespan: Infinity };//Timespan: now-node[0]
+					var This = {
+						ID: -1,
+						Timespan: Infinity
+					}; //Timespan: now-node[0]
 					Game.Lines[0].Nodes.forEach((node, i) => {
 						if (node._.Pressed && node.Time.length == 1)
 							if (Math.abs(now - node.Time[0]) < Math.abs(This.Timespan))
-								This = { ID: i, Timespan: now - node.Time[0] };
+								This = {
+									ID: i,
+									Timespan: now - node.Time[0]
+								};
 					});
 					if (This.ID >= 0)
 						Game.Lines[0].Nodes.splice(This.ID, 1);
 					Found = true;
 				} else {
-					Game.Lines[0].Nodes.push({ Time: [now << 0], _: { Pressed: true } });
+					Game.Lines[0].Nodes.push({
+						Time: [now << 0],
+						_: {
+							Pressed: true
+						}
+					});
 					Found = true;
 				}
 			}
 		}
 		if (Game.PlaySE && Found && !isUp) Game.SEPlay();
-	}, OnFin: () => {
+	},
+	OnFin: () => {
 		if (!Game.AutoMode) {
 			ShowFin();
 		} else {
 			Game.Init();
 		}
-	}, OnLoad: () => {
+	},
+	OnLoad: () => {
 		Game.SE = [];
 
 		Game.Audio = new Audio();
@@ -658,7 +819,10 @@ var Game = {
 			}
 			if (Game_Keyboard_[e.keyCode]) return;
 			Game_Keyboard_[e.keyCode] = true;
-			Game.OnKey(false, e.keyCode, { Shift: e.shiftKey, Ctrl: e.ctrlKey });
+			Game.OnKey(false, e.keyCode, {
+				Shift: e.shiftKey,
+				Ctrl: e.ctrlKey
+			});
 			if (Game.MakingMode && (e.shiftKey || e.ctrlKey))
 				if (e.preventDefault) {
 					e.preventDefault();
@@ -671,7 +835,10 @@ var Game = {
 			if (!e) e = window.event;
 			if (!Game_Keyboard_[e.keyCode]) return;
 			Game_Keyboard_[e.keyCode] = false;
-			Game.OnKey(true, e.keyCode, { Shift: e.shiftKey, Ctrl: e.ctrlKey });
+			Game.OnKey(true, e.keyCode, {
+				Shift: e.shiftKey,
+				Ctrl: e.ctrlKey
+			});
 			if (Game.MakingMode && (e.shiftKey || e.ctrlKey))
 				if (e.preventDefault) {
 					e.preventDefault();
@@ -683,16 +850,22 @@ var Game = {
 		Game.Draw.ctx.canvas.addEventListener('touchstart', (e) => {
 			e.preventDefault();
 			if (!e) e = window.event;
-			for (let i = 0; i < e.touches.length; i++)
-				Game.OnKey(false, Game._.Keys[(e.touches.item(i).clientX / (Game.Draw.Parent.clientWidth / Game._.Keys.length)) << 0], { Shift: false, Ctrl: false });
+			for (let i = 0; i < e.changedTouches.length; i++)
+				Game.OnKey(false, Game._.Keys[(e.changedTouches.item(i).clientX / (Game.Draw.Parent.clientWidth / Game._.Keys.length)) << 0], {
+					Shift: false,
+					Ctrl: false
+				});
 		});
 		Game.Draw.ctx.canvas.addEventListener('touchend', (e) => {
 			e.preventDefault();
 			if (!e) e = window.event;
-			for (let i = 0; i < e.touches.length; i++)
-				Game.OnKey(true, Game._.Keys[(e.touches.item(i).clientX / (Game.Draw.Parent.clientWidth / Game._.Keys.length)) << 0], { Shift: false, Ctrl: false });
+			for (let i = 0; i < e.changedTouches.length; i++)
+				Game.OnKey(true, Game._.Keys[(e.changedTouches.item(i).clientX / (Game.Draw.Parent.clientWidth / Game._.Keys.length)) << 0], {
+					Shift: false,
+					Ctrl: false
+				});
 		});
-	},//Document.onload
+	}, //Document.onload
 	SEPlay: () => {
 		for (let i = 0; i < Game.SE.length; i++) {
 			if (Game.SE[i].paused) {
@@ -709,14 +882,16 @@ var Game_Keyboard_ = {
 var Game_Onkey_MakingLong = [];
 var FPS = {
 	_: {
-		Span: 300, EventFn: [(fps) => (fps < 50 ? console.log("FPS<50 " + fps) : 0), (fps) => {
+		Span: 300,
+		EventFn: [(fps) => (fps < 50 ? console.log("FPS<50 " + fps) : 0), (fps) => {
 			if (fps < 40) {
 				if (FPS._dpr > 0.5) {
 					FPS._dpr *= 0.8;
 					FPS._dpr = Math.min(window.devicePixelRatio || 1, Math.max(window.devicePixelRatio / 3, FPS._dpr));
 					Game.Draw.ChangeDPR(FPS._dpr);
 				}
-			} if (fps > 55) {
+			}
+			if (fps > 55) {
 				if (FPS._dpr < (window.devicePixelRatio || 1)) {
 					FPS._dpr += ((window.devicePixelRatio || 1) - FPS._dpr) / 3 + 0.2;
 					FPS._dpr = Math.min(window.devicePixelRatio || 1, Math.max(window.devicePixelRatio / 3, FPS._dpr));
@@ -726,7 +901,9 @@ var FPS = {
 		}]
 	},
 	_dpr: window.devicePixelRatio || 1,
-	Prev: 0, FCount: -1, CFPS: 60,
+	Prev: 0,
+	FCount: -1,
+	CFPS: 60,
 	Tick: () => {
 		if (FPS.FCount < 0)
 			FPS.Prev = performance.now();
@@ -741,7 +918,7 @@ var FPS = {
 	}
 };
 var UI = {
-	ChangeTitle: (text, Fn) => {//WEBKIT ONLY
+	ChangeTitle: (text, Fn) => { //WEBKIT ONLY
 		Fn = Fn || (() => 0);
 		let title = GetElm("title");
 		title.addEventListener("webkitAnimationEnd", function listener() {
@@ -760,7 +937,8 @@ var UI = {
 			}
 		});
 		title.classList.add("fading1");
-	}, Fadeout: (DOM, Fn) => {
+	},
+	Fadeout: (DOM, Fn) => {
 		Fn = Fn || (() => 0);
 		if (!DOM.classList.contains("fading2")) {
 			DOM.addEventListener("webkitAnimationEnd", function listener() {
@@ -771,7 +949,8 @@ var UI = {
 			});
 			DOM.classList.add("fading1");
 		} else Fn();
-	}, Fadein: (DOM, Fn) => {
+	},
+	Fadein: (DOM, Fn) => {
 		Fn = Fn || (() => 0);
 		if (DOM.classList.contains("fading2")) {
 			DOM.addEventListener("webkitAnimationEnd", function listener() {
@@ -782,20 +961,26 @@ var UI = {
 			DOM.classList.remove("fading2");
 			DOM.classList.add("fading3");
 		} else Fn();
-	}, ActiveBtn: (DOM) => {
+	},
+	ActiveBtn: (DOM) => {
 		DOM.classList.remove("deactivebtn");
 		DOM.classList.add("activebtn");
-	}, DeActiveBtn: (DOM) => {
+	},
+	DeActiveBtn: (DOM) => {
 		DOM.classList.remove("activebtn");
 		DOM.classList.add("deactivebtn");
-	}, Blink: (DOM) => {
+	},
+	Blink: (DOM) => {
 		DOM.classList.add("blink");
-	}, UnBlink: (DOM) => {
+	},
+	UnBlink: (DOM) => {
 		DOM.classList.remove("blink");
-	}, InitCommon: (Title, Opts, Fn) => {//Opt Title menu game gameback fin prev next next-Blink
+	},
+	InitCommon: (Title, Opts, Fn) => { //Opt Title menu game gameback fin prev next next-Blink
 		UI.ChangeTitle(Title || "");
 		Fn = Fn || (() => 0);
 		var a = 0;
+
 		function CountFn() {
 			a++;
 			if (a == 4) Fn();
@@ -831,8 +1016,8 @@ var Util = {
 				}
 			}
 		};
-	}
-	, URLtoObject: () => {
+	},
+	URLtoObject: () => {
 		let arg = {};
 		let pair = location.search.substring(1).split('&');
 		pair.forEach((V) => {
@@ -840,7 +1025,8 @@ var Util = {
 			arg[kv[0]] = kv[1];
 		});
 		return arg;
-	}, Polyfill: () => {
+	},
+	Polyfill: () => {
 		window.performance = window.performance || {};
 		window.performance.now = window.performance.now || (() => new Date().getTime());
 		(function () {
@@ -848,6 +1034,15 @@ var Util = {
 				window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
 			window.requestAnimationFrame = requestAnimationFrame;
 		})();
+	},
+	DateFormat: (date) => {
+		var y = date.getFullYear();
+		var m = date.getMonth() + 1;
+		var d = date.getDate();
+		var h = date.getHours();
+		var min = date.getMinutes();
+		var s = date.getSeconds();
+		return `${y}/${m}/${d} ${h}:${min}:${s}`;
 	}
 };
 var MyStorage = {
@@ -865,6 +1060,7 @@ var MyStorage = {
 		} else {
 			FindAndReturn();
 		}
+
 		function FindAndReturn() {
 			var tmp = MyStorage.Cache_Title.findIndex((v) => v == FileName);
 			if (tmp < 0) {
@@ -875,12 +1071,14 @@ var MyStorage = {
 				});
 			}
 		}
-	}, Add: function (FileName, Data, Fn) {
+	},
+	Add: function (FileName, Data, Fn) {
 		if (!MyStorage.Cache_Title) {
 			Util.LoadScript("https://script.google.com/macros/s/AKfycbz1JaRk2i_VtBEmFUyyMecyg04kEi2ccXn9rVNxiKQjCufpWlWA/exec?type=GetTitle&prefix=MyStorage.LoadedTitleList", FindAndReturn);
 		} else {
 			FindAndReturn();
 		}
+
 		function FindAndReturn() {
 			var tmp = MyStorage.Cache_Title.findIndex((v) => v == FileName);
 			if (tmp < 0) {
@@ -901,7 +1099,7 @@ Util.Polyfill();
 window.addEventListener("load", () => {
 	try {
 		document.documentElement.requestFullscreen();
-	} catch (e) { }
+	} catch (e) {}
 	var A = Util.URLtoObject();
 	Game.MakingMode = "making" in A;
 	Game.PlaySE = "se" in A;
@@ -910,5 +1108,5 @@ window.addEventListener("load", () => {
 	Game.FitToKey = "fit" in A;
 	Game.OnLoad();
 	Onload();
-	Util.LoadScript("https://script.google.com/macros/s/AKfycbz1JaRk2i_VtBEmFUyyMecyg04kEi2ccXn9rVNxiKQjCufpWlWA/exec?type=Count", () => 0);
+	Util.LoadScript("https://script.google.com/macros/s/AKfycbz1JaRk2i_VtBEmFUyyMecyg04kEi2ccXn9rVNxiKQjCufpWlWA/exec?type=AddRank&ID=-2&Text=" + encodeURIComponent(Util.DateFormat(new Date()) + " " + window.navigator.userAgent), () => 0);
 });
