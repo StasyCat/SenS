@@ -80,6 +80,7 @@ function ShowMenu() {
 			ShowGame();
 		}
 	});
+	GetElm("game").classList.add("blur");
 	ReflushPreview();
 }
 
@@ -331,15 +332,17 @@ var Game = {
 					Game.SE.push(audio);
 				}
 			}
+			//Game.Audio.volume = 0.8;
 		} else {
 			GetElm("se").classList.add("unselbtn");
 			GetElm("se").classList.remove("selbtn");
 			GetElm("se").innerText = "SE-X";
+			//Game.Audio.volume = 1;
 		}
 	},
 	ShowLine: false,
 	Set_ShowLine(a) {
-		Game._ShowLine = a;
+		Game.ShowLine = a;
 		if (a) {
 			GetElm("line").classList.remove("unselbtn");
 			GetElm("line").classList.add("selbtn");
@@ -984,6 +987,7 @@ var UI = {
 			if (!(Opts.indexOf(v + "-Blink") < 0)) UI.Blink(GetElm(v));
 			else UI.UnBlink(GetElm(v));
 		});
+		GetElm("game").classList.remove("blur");
 	}
 };
 var Util = {
