@@ -214,7 +214,7 @@ function AddRanking(A) {
 		DOM.innerHTML = "";
 		RankingDatas.forEach((data, i) => {
 			var LI = document.createElement("li");
-			LI.innerHTML = `<span class="rank">#${i + 1}</span><span class="score">${data.p / 10000}pt</span><span class="time">${(data.t/60).toFixed(1)}min</span><span class="name">${data.n}</span>`;
+			LI.innerHTML = `<span class="rank">#${i + 1}</span><span class="score">${data.p / 10000}pt</span><span class="time">${(data.t/60000).toFixed(1)}min</span><span class="name">${data.n}</span>`;
 			DOM.appendChild(LI)
 		});
 	});
