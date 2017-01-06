@@ -14,7 +14,7 @@
 		/* だって、海がデザイン変えるって言うから */
 		
 		body {
-			background-image: url("background.gif");
+			background-image: url("background.jpg");
 		}
 		
 		body>* {
@@ -144,6 +144,9 @@
 			border-radius: 2em;
 		}
 		
+		#name,
+		#songlist>*,
+		#tags>*,
 		#inputs>* {
 			font-size: 1.5em;
 		}
@@ -152,14 +155,12 @@
 			margin-left: 1em;
 		}
 		
-		#name,
-		#songlist>*,
-		#tags>* {
-			font-size: 1.5em;
-		}
-		
 		#inputs {
 			margin-bottom: 1em;
+		}
+		
+		#song {
+			min-width: 3em;
 		}
 		
 		#filter {
@@ -378,7 +379,7 @@
 				<canvas id="c1"></canvas>
 			</div>
 			<div class="cV fading2" id="menu">
-				<div class="cH" id="inputs">
+				<div class="cH scrollX" id="inputs">
 					<div class="grow" id="song" song="_">Song...</div>
 					<div class="unselbtn" id="se">SE-X</div>
 					<div class="unselbtn" id="line">Line-X</div>
