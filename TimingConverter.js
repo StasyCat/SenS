@@ -7,8 +7,9 @@ document.body.appendChild(a);
 
 
 console.log("--DATA--");
-(function () {
+(function Format() {
 	var ii = 0;
+	var NodeTexts = [];
 	Game.Lines.forEach((v, iii) => {
 		ii = 0;
 		var Texts = [];
@@ -20,14 +21,6 @@ console.log("--DATA--");
 			} else {
 				console.warn(tmp[i - 1].Time[0] + ":" + v.Time[0]);
 			}
-		});
-	});
-	var NodeTexts = [];
-	Game.Lines.forEach((v, i) => {
-		var Texts = [];
-		v.Nodes.sort((a, b) => a.Time[0] - b.Time[0]).forEach((v) => {
-			if (!v._.Pressed)
-				Texts.push(i + ":" + v.Time.join(":"));
 		});
 		NodeTexts.push(Texts.join(" "));
 	});

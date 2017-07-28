@@ -75,5 +75,11 @@
 		Level: 11,
 		File: "Yesterday-11",
 		Music: "夕景イエスタデイ.mp3"
+	},
+	{
+		Title: "不死の煙",
+		Level: 15,
+		File: "Smoke-15",
+		Music: "Smoke.mp3"
 	}
 ];
