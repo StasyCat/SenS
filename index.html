@@ -7,19 +7,21 @@
 	<meta name="description" content="いわゆる音ゲーです">
 	<meta name="viewport" content="width=device-width, initial-scale=1,minimum-scale=1.0, maximum-scale=1.0,user-scalable=no">
 	<meta name="author" content="omasakun Kai">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<link href="https://fonts.googleapis.com/earlyaccess/notosansjapanese.css" id="gwebfont1" />
-	<link href="https://fonts.googleapis.com/css?family=Open+Sans|Open+Sans+Condensed:300|Quicksand:300|Raleway:200" id="gwebfont2"	/>
+	<link href="https://fonts.googleapis.com/css?family=Open+Sans|Open+Sans+Condensed:300|Quicksand:300|Raleway:200" id="gwebfont2"
+	/>
 	<style>
 		/* だって、海がデザイン変えるって言うから */
-		
+
 		body {
 			background-image: url("background.jpg");
 		}
-		
+
 		body>* {
 			background: rgba(0, 0, 0, 0.7);
 		}
-		
+
 		#body>* {
 			/*background-color: transparent !important;*/
 			box-shadow: 0 0 1em #000;
@@ -30,97 +32,97 @@
 			margin: 0;
 			padding: 0;
 		}
-		
+
 		body {
 			background-color: #000;
 			color: #CCC;
 			font-family: "Open Sans", 'Noto Sans Japanese', Roboto, "Yu Gothic", "Meiryo UI", sans-serif;
 			overflow: hidden;
 		}
-		
+
 		#head,
 		.head {
 			font-family: Raleway, 'Noto Sans Japanese', Roboto, "Yu Gothic", "Meiryo UI", sans-serif;
 		}
-		
+
 		html,
 		body,
 		.fullH,
 		#body>* {
 			height: 100%;
 		}
-		
+
 		html,
 		body,
 		.fullW,
 		#body>* {
 			width: 100%;
 		}
-		
+
 		#body>*,
 		#menubody>* {
 			position: absolute;
 		}
-		
+
 		#body,
 		#menubody {
 			position: relative;
 		}
-		
+
 		.cV,
 		.cH {
 			display: flex;
 		}
-		
+
 		.cV {
 			flex-direction: column;
 		}
-		
+
 		.cH {
 			flex-direction: row;
 		}
-		
+
 		.scrollY {
 			overflow-y: auto;
 		}
-		
+
 		.scrollX {
 			overflow-x: auto;
 		}
-		
+
 		.mL {
 			margin-left: 1em;
 		}
-		
+
 		.mBoth {
 			margin-left: 1em;
 			margin-right: 1em;
 		}
-		
+
 		.grow {
 			flex-grow: 1;
 		}
-		
+
 		.listV>* {
 			display: block;
 			margin-bottom: 0.2em;
 		}
-		
+
 		#head {
 			font-size: 5vh;
 			vertical-align: middle;
 			box-shadow: 0 -10px 15px 11px #FFF;
 			margin-bottom: 0.5em;
 		}
-		
+
 		#body>* {
 			background-color: rgba(0, 0, 0, 0.5)
 		}
-		
+
 		#song {
 			text-align: left;
 		}
-		
+
 		#title,
 		#prev,
 		#next {
@@ -128,78 +130,78 @@
 			padding-bottom: 0.5em;
 			max-height: 5vh;
 		}
-		
+
 		#title,
 		#song {
 			text-overflow: ellipsis;
 			white-space: nowrap;
 			overflow: hidden;
 		}
-		
+
 		#prev,
 		#next {
 			font-weight: bold;
 			min-width: 1em;
 			border-radius: 2em;
 		}
-		
+
 		#name,
 		#songlist>*,
 		#tags>*,
 		#inputs>* {
 			font-size: 1.5em;
 		}
-		
+
 		#inputs>*:not(:first-child) {
 			margin-left: 1em;
 		}
-		
+
 		#inputs {
 			margin-bottom: 1em;
 		}
-		
+
 		#song {
 			min-width: 3em;
 		}
-		
+
 		#filter {
 			margin-bottom: 0.5em;
 		}
-		
+
 		#tags {
 			display: inline;
 			overflow-x: scroll;
 			border-collapse: separate;
 			border-spacing: 0.5em 0;
 		}
-		
+
 		#tags>* {
 			display: table-cell;
 			margin-right: 0.5em;
 		}
-		
+
 		.rank {
 			margin-right: 1em;
 			flex-basis: 3em;
 			flex-shrink: 1;
 		}
-		
+
 		.score {
 			margin-right: 1em;
 			flex-basis: 5em;
 			flex-shrink: 1;
 		}
-		
+
 		.time {
 			margin-right: 1em;
 			flex-basis: 5em;
 			flex-shrink: 1;
 		}
-		
+
 		.name {
 			flex-grow: 1;
 		}
-		
+
 		@keyframes active-btn {
 			from {
 				color: #FFD;
@@ -208,7 +210,7 @@
 				color: #BB4;
 			}
 		}
-		
+
 		@keyframes deactive-btn {
 			from {
 				color: #666;
@@ -217,7 +219,7 @@
 				color: #666;
 			}
 		}
-		
+
 		@keyframes unselected-btn {
 			from {
 				color: #990;
@@ -226,7 +228,7 @@
 				color: #770;
 			}
 		}
-		
+
 		@keyframes selected-btn {
 			from {
 				color: #FFD;
@@ -237,7 +239,7 @@
 				text-shadow: 0 0 5px #FFF;
 			}
 		}
-		
+
 		@keyframes fading {
 			from {
 				opacity: 1;
@@ -246,7 +248,7 @@
 				opacity: 0;
 			}
 		}
-		
+
 		@keyframes blink {
 			from {
 				background-color: transparent;
@@ -258,17 +260,17 @@
 				background-color: transparent;
 			}
 		}
-		
+
 		#next.activebtn,
 		#prev.activebtn {
 			animation-direction: normal;
 		}
-		
+
 		.activebtn,
 		#gameback {
 			user-select: none;
 		}
-		
+
 		#song,
 		#speed,
 		#min,
@@ -279,45 +281,45 @@
 			cursor: pointer;
 			user-select: none;
 		}
-		
+
 		.deactivebtn,
 		.selbtn {
 			animation: deactive-btn 1s ease-in-out alternate infinite backwards;
 			cursor: default;
 			user-select: none;
 		}
-		
+
 		.selbtn {
 			animation: selected-btn 0.75s ease-in-out alternate infinite backwards !important;
 			cursor: pointer;
 			user-select: none;
 		}
-		
+
 		.unselbtn,
 		#tags>* {
 			animation: unselected-btn 1s ease-in-out alternate infinite backwards;
 			cursor: pointer;
 			user-select: none;
 		}
-		
+
 		.fading1 {
 			animation: fading 0.5s ease-in-out normal forwards;
 		}
-		
+
 		.fading2 {
 			opacity: 0;
 			visibility: hidden;
 		}
-		
+
 		.fading3 {
 			animation: fading 0.2s ease-in-out reverse backwards;
 		}
-		
+
 		.blink {
 			animation: blink 1.4s ease-in-out infinite backwards;
 		}
-		
-		.blur{
+
+		.blur {
 			filter: blur(0.3em);
 		}
 
@@ -327,21 +329,21 @@
 			background: #444;
 			border-radius: 0.2em;
 		}
-		
+
 		::-webkit-scrollbar:horizontal {
 			height: 0.2cm;
 		}
-		
+
 		::-webkit-scrollbar-button {
 			display: none;
 		}
-		
+
 		::-webkit-scrollbar-thumb {
 			overflow: hidden;
 			border-radius: 0.2em;
 			background: #BBB;
 		}
-		
+
 		::-webkit-scrollbar-corner {
 			overflow: hidden;
 			border-radius: 0.2em;
@@ -379,6 +381,7 @@
 			<div class="cV fading2" id="menu">
 				<div class="cH scrollX" id="inputs">
 					<div class="grow" id="song" song="_">Song...</div>
+					<div class="unselbtn" id="effect">Effect-X</div>
 					<div class="unselbtn" id="se">SE-X</div>
 					<div class="unselbtn" id="line">Line-X</div>
 					<div id="min">
@@ -406,6 +409,7 @@
 									<li>タイトルに[Tap here...]が表示された場合、[Tap here...]を押す</li>
 									<li>(Optional) 右上[Speed]を押し、スピードを入れる</li>
 									<li>(Optional) 右上[..min]を押し、時間間隔を入れる</li>
+									<li>(カクつく時は...) 右上[Effect]を押し、過剰なエフェクトをなくす</li>
 									<li>右上[&gt;]を押し、ゲームを開始する</li>
 									<li>[Name]を押し、スコアと名前を登録する</li>
 								</ol>
@@ -413,6 +417,7 @@
 							<p style="margin-top: 1em">
 								更新
 								<ul style="margin-left: 1em;">
+									<li style="display: block">2017/07/28 過剰なラインの装飾を[Effect-O]のクリックにより取り除けるようにした</li>
 									<li style="display: block">2017/07/27 曲の追加,空打ちへの対応,過剰なラインの装飾</li>
 								</ul>
 							</p>

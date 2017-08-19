@@ -1,13 +1,13 @@
 "use strict";
 console.info(`Keys
 SDF_JKL: あれ
-N: Pause
-M: Restart
 ** Making Only **
 Shift: Remove node/assist
 Ctrl: Assistに従う
 WERBUIO: Long node
 [other]: Assist node
+N: Pause
+M: Restart
 Enter: Finish
 C: Speed down
 V: Speed up
@@ -75,6 +75,11 @@ function Onload() {
 		if (e.preventDefault)
 			e.preventDefault();
 		Game.Set_ShowLine(GetElm("line").classList.contains("unselbtn"));
+	});
+	GetElm("effect").addEventListener("click", (e) => {
+		if (e.preventDefault)
+			e.preventDefault();
+		Game.Set_Effect(GetElm("effect").classList.contains("unselbtn"));
 	});
 	Util.LoadScript("songs.js", () => {
 		window["SongList"] = window["SongList"].map((v) => {
@@ -311,6 +316,7 @@ class Drawing {
 	LongRound(x, y, h, r) {
 		this.ctx.arc((x * this.Scalex) << 0, (y * this.Scaley) << 0, (r * Math.min(this.Scalex, this.Scaley)) << 0, -Math.PI, 0);
 		this.ctx.arc((x * this.Scalex) << 0, ((y + h) * this.Scaley) << 0, (r * Math.min(this.Scalex, this.Scaley)) << 0, 0, -Math.PI);
+		this.ctx.lineTo((x * this.Scalex - r * Math.min(this.Scalex, this.Scaley)) << 0, (y * this.Scaley) << 0);
 	}
 	Fill(Style, globalCompositeOperation) {
 		let Tmp = this.ctx.fillStyle;
@@ -328,8 +334,8 @@ var Game = {
 		MakingLongKeys: [87, 69, 82, 66, 85, 73, 79],
 		BorderY: 0.8,
 		Radius: 0.5,
-		MaxScoreLimitGOSA: 50,
-		LimitGOSA: 200,
+		MaxScoreLimitGOSA: 30,
+		LimitGOSA: 150,
 		MistakeScore: -100,
 		SECount: 50,
 		SEPath: "Tap.mp3",
@@ -372,6 +378,19 @@ var Game = {
 			GetElm("line").classList.add("unselbtn");
 			GetElm("line").classList.remove("selbtn");
 			GetElm("line").innerText = "Line-X";
+		}
+	},
+	Effect: true,
+	Set_Effect(a) {
+		Game.Effect = a;
+		if (a) {
+			GetElm("effect").classList.remove("unselbtn");
+			GetElm("effect").classList.add("selbtn");
+			GetElm("effect").innerText = "Effect-O";
+		} else {
+			GetElm("effect").classList.add("unselbtn");
+			GetElm("effect").classList.remove("selbtn");
+			GetElm("effect").innerText = "Effect-X";
 		}
 	},
 	FitToKey: false,
@@ -537,24 +556,38 @@ var Game = {
 			var ColorOfNode = `hsl(${line.Color * 60 + 60},${Math.min(0.8, line.Light) * 100 + 10}%,${Math.min(0.4, line.Light) * 25 + 50}%)`;
 			var Linex = 1 / Game.Lines.length * (i + 0.5);
 			var Ry = Game._.Radius / Game.Lines.length * (Game.Draw.Scalex > Game.Draw.Scaley ? 1 : Game.Draw.Scalex / Game.Draw.Scaley);
-			Game.Draw.ctx.save();
-			Game.Draw.ctx.lineWidth *= Math.min(0.8, line.Light) / 0.8 * Game._.Radius * Math.min(Game.Draw.Scalex, Game.Draw.Scaley) / Game.Lines.length * 3.6 + 1;
-			Game.Draw.Alpha( 1 - (.8 * line.Light));
-			Game.Draw.Path(() => {
-				/*if (i * 2 == Game._.Keys.length - 1)*/
-				Game.Draw.Line(Linex, 0, Linex, Game._.BorderY - Ry);
-				return {
-					"Stroke": Color
-				};
-			});
-			Game.Draw.ctx.restore();
-			Game.Draw.Path(() => {
-				/*if (i * 2 == Game._.Keys.length - 1)*/
-				Game.Draw.Round(Linex, Game._.BorderY, Game._.Radius / Game.Lines.length);
-				return {
-					"Stroke": Color
-				};
-			});
+			if (Game.Effect) {
+				Game.Draw.Alpha(1 - (.8 * line.Light));
+				Game.Draw.Path(() => {
+					var width = Math.min(0.8, line.Light) / 0.8 * Game._.Radius * Math.min(Game.Draw.Scalex, Game.Draw.Scaley) / Game.Lines.length * 3 + 1;
+					width = width << 0;
+					/*if (i * 2 == Game._.Keys.length - 1)*/
+					Game.Draw.ctx.rect(
+						((Linex * Game.Draw.Scalex) << 0) - ((width / 2) << 0), 0,
+						width, ((Game._.BorderY - Ry) * Game.Draw.Scaley) << 0
+					);
+					//Game.Draw.Line(Linex, 0, Linex, Game._.BorderY - Ry);
+					return {
+						"Fill": Color
+					};
+				});
+				Game.Draw.Alpha(1);
+				Game.Draw.Path(() => {
+					/*if (i * 2 == Game._.Keys.length - 1)*/
+					Game.Draw.Round(Linex, Game._.BorderY, Game._.Radius / Game.Lines.length);
+					return {
+						"Stroke": Color
+					};
+				});
+			} else {
+				Game.Draw.Path(() => {
+					Game.Draw.Line(Linex, 0, Linex, Game._.BorderY - Ry);
+					Game.Draw.Round(Linex, Game._.BorderY, Game._.Radius / Game.Lines.length);
+					return {
+						"Stroke": Color
+					};
+				});
+			}
 			line.Nodes.some((node) => {
 				switch (node.Time.length) {
 					case 1:
@@ -606,22 +639,31 @@ var Game = {
 							}
 							return false;
 						}
-						if (Game.AutoMode) {
-							node._.Pressed = true;
-							if (Game.PlaySE) Game.SEPlay();
-							line.Light = 1;
+						if (y2 > Game._.BorderY && !node._.Pressed) {
+							if (Game.AutoMode) {
+								node._.Pressed = true;
+								if (Game.PlaySE) Game.SEPlay();
+								line.Light = 1;
+							}
+						} else if (y1 > Game._.BorderY && !node._.KeyDowned) {
+							if (Game.AutoMode) {
+								node._.KeyDowned = true;
+								if (Game.PlaySE) Game.SEPlay();
+								line.Light = 1;
+							}
 						}
-						Game.Draw.Path(() => {
-							Game.Draw.LongRound(Linex, y2, y1 - y2, Game._.Radius / Game.Lines.length);
-							if (node._.Pressed)
-								return {
-									"Stroke": ColorOfNode
-								};
-							else
-								return {
-									"Fill": ColorOfNode
-								};
-						});
+						if (Game.MakingMode || !node._.Pressed)
+							Game.Draw.Path(() => {
+								Game.Draw.LongRound(Linex, y2, y1 - y2, Game._.Radius / Game.Lines.length);
+								//if (node._.KeyDowned)
+								//	return {
+								//		"Stroke": ColorOfNode
+								//	};
+								//else
+									return {
+										"Fill": ColorOfNode
+									};
+							});
 						if (Game.ShowLine) Game.Draw.Path(() => {
 							Game.Draw.Line(0, y1, 1, y1);
 							Game.Draw.Line(0, y2, 1, y2);
@@ -639,16 +681,6 @@ var Game = {
 	OnKey: (isUp, Key, Other) => {
 		if (Game.AutoMode) return;
 		var now = Game.Audio.currentTime * 1000;
-		if (Key == 78) { //N: Pause
-			if (isUp) return;
-			Game.Audio.pause();
-			return;
-		}
-		if (Key == 77) { //M: Restart
-			if (isUp) return;
-			Game.Audio.play();
-			return;
-		}
 		if (!Game.MakingMode && Game.Audio.paused) return;
 		var Found = Game._.Keys.some((key, i) => {
 			if (key == Key) {
@@ -746,7 +778,7 @@ var Game = {
 								Game._._FitToKey = Math.min(1.5, Math.max(0.5, Game._._FitToKey));
 								Game.Audio.playbackRate = Math.min(1.5, Math.max(0.5, Game.Audio.playbackRate - (Game.Audio.playbackRate - Game._._FitToKey) / 10));
 							}
-						} else if (!isUp) {
+						// } else if (!isUp) {
 							//Game.Combo = 0;
 							//Game.Set_Score(Game.Score + Game._.MistakeScore);
 						}
@@ -829,8 +861,30 @@ var Game = {
 			if (!e) e = window.event;
 			if (Game.MakingMode) {
 				switch (e.keyCode) {
+					case 78: //N: Pause
+						if (isUp) return;
+						Game.Audio.pause();
+					case 77: //M: Restart
+						if (isUp) return;
+						Game.Audio.play();
 					case 13: //Enter: Finish
 						Game.FinishTime = Game.Audio.currentTime * 1000;
+						(function () {
+							var ii = 0;
+							Game.Lines.forEach((v, iii) => {
+								ii = 0;
+								var Texts = [];
+								var tmp = v.Nodes.sort((a, b) => a.Time[0] - b.Time[0]);
+								tmp.forEach((v, i) => {
+									if (i == 0 || v.Time.length != 1 || Math.abs(tmp[i - 1].Time[0] - v.Time[0]) > 50) {
+										Texts.push(iii + ":" + v.Time.join(":"));
+										if (i != 0 && Math.abs(tmp[i - 1].Time[0] - v.Time[0]) < 100) console.log("?: " + tmp[i - 1].Time[0] + ":" + v.Time[0]);
+									} else {
+										console.warn(tmp[i - 1].Time[0] + ":" + v.Time[0]);
+									}
+								});
+							});
+						})();
 						console.log("--DATA--");
 						var NodeTexts = [];
 						Game.Lines.forEach((v, i) => {
@@ -841,7 +895,7 @@ var Game = {
 							});
 							NodeTexts.push(Texts.join(" "));
 						});
-						NodeTexts.push(Game.FinishTime);
+						NodeTexts.push(Game.FinishTime << 0);
 						console.log('NodeText = "' + NodeTexts.join(" ") + '";');
 						return;
 					case 67: //C: SpeedDown
@@ -1191,6 +1245,7 @@ window.addEventListener("load", () => {
 	Game.MakingMode = "making" in A;
 	Game.Set_PlaySE("se" in A);
 	Game.Set_ShowLine("line" in A);
+	Game.Set_Effect(!("noeffect" in A));
 	if ("speed" in A) Game.Speed = A.speed;
 	Game.FitToKey = "fit" in A;
 	Game.OnLoad();
