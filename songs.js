@@ -75,5 +75,11 @@
 		Level: 11,
 		File: "Yesterday-11",
 		Music: "夕景イエスタデイ.mp3"
+	},
+	{
+		Title: "フラワリングナイト",
+		Level: 10,
+		File: "Flowering-10",
+		Music: "【東方花映塚】フラワリングナイト.mp3"
 	}
 ];
