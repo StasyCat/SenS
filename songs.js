@@ -12,7 +12,7 @@ var SongList = [{
 	},
 	{
 		Title: "ロストワンの号哭",
-		Level: 09,
+		Level: 08,
 		File: "LostOne-8",
 		Music: "LostOne.mp3"
 	},
