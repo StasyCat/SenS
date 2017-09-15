@@ -100,11 +100,5 @@
 		Level: 12,
 		File: "Syake-10",
 		Music: "秋鮭.m4a"
-	},
-	{
-		Title: "秋鮭",
-		Level: 12,
-		File: "Syake-10",
-		Music: "秋鮭.m4a"
 	}
 ];
