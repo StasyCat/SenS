@@ -611,7 +611,7 @@ var Game = {
 					case 1:
 						var y = Math.pow(1 - ((node.Time[0] - now) / Game.Speed * (Game.Accelerate ? 1 : Math.pow(Game._.BorderY, 4) * 5)), Game.Accelerate ? 5 : 1) * (Game._.BorderY + Ry) - Ry;
 						if (y < -Ry) return !Game.MakingMode;
-						if (y > 1 + Ry) {
+						if (y > 1 + Ry && Math.abs(node.Time[0] - now) > Game._.LimitGOSA) {
 							if (!Game.AutoMode && !node._.Pressed && !Game.MakingMode) {
 								node._.Pressed = true;
 								Game.Combo = 0;
@@ -649,7 +649,7 @@ var Game = {
 						var y1 = Math.pow(1 - ((node.Time[0] - now) / Game.Speed * (Game.Accelerate ? 1 : Math.pow(Game._.BorderY, 4) * 5)), Game.Accelerate ? 5 : 1) * (Game._.BorderY + Ry) - Ry; //小さい
 						var y2 = Math.pow(1 - ((node.Time[1] - now) / Game.Speed * (Game.Accelerate ? 1 : Math.pow(Game._.BorderY, 4) * 5)), Game.Accelerate ? 5 : 1) * (Game._.BorderY + Ry) - Ry; //大きい
 						if (y1 < -Ry) return !Game.MakingMode;
-						if (y2 > 1 + Ry) {
+						if (y2 > 1 + Ry && Math.abs(node.Time[1] - now) > Game._.LimitGOSA) {
 							if (!Game.AutoMode && !node._.Pressed && !Game.MakingMode) {
 								node._.Pressed = true;
 								Game.Combo = 0;
