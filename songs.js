@@ -1,4 +1,4 @@
-var SongList = [{
+﻿var SongList = [{
 		Title: "ロストワンの号哭",
 		Level: 04,
 		File: "LostOne-4",
@@ -60,7 +60,7 @@ var SongList = [{
 	},
 	{
 		Title: "夜咄ディセイブ",
-		Level: 12,
+		Level: 11,
 		File: "Yobanashi-12",
 		Music: "夜咄ディセイブ.mp3"
 	},
@@ -72,19 +72,27 @@ var SongList = [{
 	},
 	{
 		Title: "夕景イエスタデイ",
-		Level: 11,
+		Level: 13,
 		File: "Yesterday-11",
 		Music: "夕景イエスタデイ.mp3"
 	},
+	/*ここから*/
 	{
-		Title: "フラワリングナイト",
-		Level: 10,
-		File: "Flowering-10",
-		Music: "【東方花映塚】フラワリングナイト.mp3"
-  },{
 		Title: "不死の煙",
-		Level: 15,
+		Level: 18,
 		File: "Smoke-15",
 		Music: "Smoke.mp3"
+	},/*ここまで*/
+	{
+		Title: "秋鮭",
+		Level: 6,
+		File: "Syake-6",
+		Music: "秋鮭.m4a"
+	},
+	{
+		Title: "秋鮭",
+		Level: 10,
+		File: "Syake-10",
+		Music: "秋鮭.m4a"
 	}
 ];
