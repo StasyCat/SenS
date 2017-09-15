@@ -81,6 +81,11 @@ function Onload() {
 			e.preventDefault();
 		Game.Set_Effect(GetElm("effect").classList.contains("unselbtn"));
 	});
+	GetElm("accelerate").addEventListener("click", (e) => {
+		if (e.preventDefault)
+			e.preventDefault();
+		Game.Set_Accelerate(GetElm("accelerate").classList.contains("unselbtn"));
+	});
 	Util.LoadScript("songs.js", () => {
 		window["SongList"] = window["SongList"].map((v) => {
 			v["Title"] += " Lv." + v["Level"];
@@ -393,6 +398,19 @@ var Game = {
 			GetElm("effect").innerText = "Effect-X";
 		}
 	},
+	Accelerate: true,
+	Set_Accelerate(a) {
+		Game.Accelerate = a;
+		if (a) {
+			GetElm("accelerate").classList.remove("unselbtn");
+			GetElm("accelerate").classList.add("selbtn");
+			GetElm("accelerate").innerText = "Accelerate-O";
+		} else {
+			GetElm("accelerate").classList.add("unselbtn");
+			GetElm("accelerate").classList.remove("selbtn");
+			GetElm("accelerate").innerText = "Accelerate-X";
+		}
+	},
 	FitToKey: false,
 	Draw: undefined, //Overwritten by Game.OnLoad
 	Lines: [{
@@ -591,7 +609,7 @@ var Game = {
 			line.Nodes.some((node) => {
 				switch (node.Time.length) {
 					case 1:
-						var y = Math.pow(1 - ((node.Time[0] - now) / Game.Speed), 5) * (Game._.BorderY + Ry) - Ry;
+						var y = Math.pow(1 - ((node.Time[0] - now) / Game.Speed * (Game.Accelerate ? 1 : Math.pow(Game._.BorderY, 4) * 5)), Game.Accelerate ? 5 : 1) * (Game._.BorderY + Ry) - Ry;
 						if (y < -Ry) return !Game.MakingMode;
 						if (y > 1 + Ry) {
 							if (!Game.AutoMode && !node._.Pressed && !Game.MakingMode) {
@@ -628,8 +646,8 @@ var Game = {
 						});
 						break;
 					case 2:
-						var y1 = Math.pow(1 - ((node.Time[0] - now) / Game.Speed), 5) * (Game._.BorderY + Ry) - Ry; //小さい
-						var y2 = Math.pow(1 - ((node.Time[1] - now) / Game.Speed), 5) * (Game._.BorderY + Ry) - Ry; //大きい
+						var y1 = Math.pow(1 - ((node.Time[0] - now) / Game.Speed * (Game.Accelerate ? 1 : Math.pow(Game._.BorderY, 4) * 5)), Game.Accelerate ? 5 : 1) * (Game._.BorderY + Ry) - Ry; //小さい
+						var y2 = Math.pow(1 - ((node.Time[1] - now) / Game.Speed * (Game.Accelerate ? 1 : Math.pow(Game._.BorderY, 4) * 5)), Game.Accelerate ? 5 : 1) * (Game._.BorderY + Ry) - Ry; //大きい
 						if (y1 < -Ry) return !Game.MakingMode;
 						if (y2 > 1 + Ry) {
 							if (!Game.AutoMode && !node._.Pressed && !Game.MakingMode) {
@@ -660,9 +678,9 @@ var Game = {
 								//		"Stroke": ColorOfNode
 								//	};
 								//else
-									return {
-										"Fill": ColorOfNode
-									};
+								return {
+									"Fill": ColorOfNode
+								};
 							});
 						if (Game.ShowLine) Game.Draw.Path(() => {
 							Game.Draw.Line(0, y1, 1, y1);
@@ -778,7 +796,7 @@ var Game = {
 								Game._._FitToKey = Math.min(1.5, Math.max(0.5, Game._._FitToKey));
 								Game.Audio.playbackRate = Math.min(1.5, Math.max(0.5, Game.Audio.playbackRate - (Game.Audio.playbackRate - Game._._FitToKey) / 10));
 							}
-						// } else if (!isUp) {
+							// } else if (!isUp) {
 							//Game.Combo = 0;
 							//Game.Set_Score(Game.Score + Game._.MistakeScore);
 						}
@@ -1246,6 +1264,7 @@ window.addEventListener("load", () => {
 	Game.Set_PlaySE("se" in A);
 	Game.Set_ShowLine("line" in A);
 	Game.Set_Effect(!("noeffect" in A));
+	Game.Set_Accelerate(!("accelerate" in A));
 	if ("speed" in A) Game.Speed = A.speed;
 	Game.FitToKey = "fit" in A;
 	Game.OnLoad();
