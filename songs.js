@@ -72,14 +72,19 @@
 	},
 	{
 		Title: "夕景イエスタデイ",
-		Level: 13,
+		Level: 11,
 		File: "Yesterday-11",
 		Music: "夕景イエスタデイ.mp3"
-	},
+	},{
+ 		Title: "フラワリングナイト",
+ 		Level: 9,
+ 		File: "Flowering-10",
+ 		Music: "【東方花映塚】フラワリングナイト.mp3"
+  	}
 	/*ここから*/
 	{
 		Title: "不死の煙",
-		Level: 18,
+		Level: 13,
 		File: "Smoke-15",
 		Music: "Smoke.mp3"
 	},/*ここまで*/
@@ -91,7 +96,13 @@
 	},
 	{
 		Title: "秋鮭",
-		Level: 10,
+		Level: 12,
+		File: "Syake-10",
+		Music: "秋鮭.m4a"
+	},
+	{
+		Title: "秋鮭",
+		Level: 12,
 		File: "Syake-10",
 		Music: "秋鮭.m4a"
 	}
