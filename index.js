@@ -43,6 +43,16 @@ function Onload() {
 			ReflushPreview();
 		}
 	});
+	GetElm("offset").addEventListener("click", (e) => {
+		if (e.preventDefault)
+			e.preventDefault();
+		var tmp = parseFloat((prompt("ノーツの判定の時間をずらせます(-1000~1000ms)") || "").replace(/[^0-9\.-]+/g, ""));
+		if (!isNaN(tmp)) {
+			GetElm("offset").innerText = "Offset" + ((tmp << 0) == 0 ? ":" : tmp > 0 ? "+" : "") + Math.min(1000, Math.max(-1000, tmp << 0)).toFixed(0);
+			GetElm("offset").setAttribute("offset", "" + Math.min(1000, Math.max(-1000, tmp << 0)));
+			ReflushPreview();
+		}
+	});
 	GetElm("min").addEventListener("click", (e) => {
 		if (e.preventDefault)
 			e.preventDefault();
@@ -120,6 +130,7 @@ function ReflushPreview() {
 		UI.Blink(GetElm("next"));
 		Game.AutoMode = false;
 		Game.Speed = 3000 / parseFloat(GetElm("speed").getAttribute("speed")); //Speed Linked
+		Game.Offset = parseFloat(GetElm("offset").getAttribute("offset"));
 		Game.Init();
 		Game.AutoMode = true;
 	} else {
@@ -433,6 +444,7 @@ var Game = {
 		GetElm("min").innerText = (a / 60000).toFixed(1) + "min";
 	},
 	Speed: 5000, /////Overwritten by ReflushPreview
+	Offset: 0, /////Overwritten by ReflushPreview
 	MaxScore: 0, //Overwritten by Init
 	Score: 0, //Overwritten by Init
 	Set_Score(a) {
@@ -611,7 +623,7 @@ var Game = {
 					case 1:
 						var y = Math.pow(1 - ((node.Time[0] - now) / Game.Speed * (Game.Accelerate ? 1 : Math.pow(Game._.BorderY, 4) * 5)), Game.Accelerate ? 5 : 1) * (Game._.BorderY + Ry) - Ry;
 						if (y < -Ry) return !Game.MakingMode;
-						if (y > 1 + Ry && Math.abs(node.Time[0] - now) > Game._.LimitGOSA) {
+						if (y > 1 + Ry && Math.abs(node.Time[0] - now + Game.Offset) > Game._.LimitGOSA) {
 							if (!Game.AutoMode && !node._.Pressed && !Game.MakingMode) {
 								node._.Pressed = true;
 								Game.Combo = 0;
@@ -619,7 +631,7 @@ var Game = {
 							}
 							return false;
 						}
-						if (y > Game._.BorderY && !node._.Pressed) {
+						if ((node.Time[0] - now + Game.Offset) < 0 && !node._.Pressed) {
 							if (Game.AutoMode) {
 								node._.Pressed = true;
 								if (Game.PlaySE) Game.SEPlay();
@@ -649,7 +661,7 @@ var Game = {
 						var y1 = Math.pow(1 - ((node.Time[0] - now) / Game.Speed * (Game.Accelerate ? 1 : Math.pow(Game._.BorderY, 4) * 5)), Game.Accelerate ? 5 : 1) * (Game._.BorderY + Ry) - Ry; //小さい
 						var y2 = Math.pow(1 - ((node.Time[1] - now) / Game.Speed * (Game.Accelerate ? 1 : Math.pow(Game._.BorderY, 4) * 5)), Game.Accelerate ? 5 : 1) * (Game._.BorderY + Ry) - Ry; //大きい
 						if (y1 < -Ry) return !Game.MakingMode;
-						if (y2 > 1 + Ry && Math.abs(node.Time[1] - now) > Game._.LimitGOSA) {
+						if (y2 > 1 + Ry && Math.abs(node.Time[1] - now + Game.Offset) > Game._.LimitGOSA) {
 							if (!Game.AutoMode && !node._.Pressed && !Game.MakingMode) {
 								node._.Pressed = true;
 								Game.Combo = 0;
@@ -657,13 +669,13 @@ var Game = {
 							}
 							return false;
 						}
-						if (y2 > Game._.BorderY && !node._.Pressed) {
+						if ((node.Time[1] - now + Game.Offset) < 0 && !node._.Pressed) {
 							if (Game.AutoMode) {
 								node._.Pressed = true;
 								if (Game.PlaySE) Game.SEPlay();
 								line.Light = 1;
 							}
-						} else if (y1 > Game._.BorderY && !node._.KeyDowned) {
+						} else if ((node.Time[0] - now + Game.Offset) < 0 && !node._.KeyDowned) {
 							if (Game.AutoMode) {
 								node._.KeyDowned = true;
 								if (Game.PlaySE) Game.SEPlay();
@@ -698,7 +710,7 @@ var Game = {
 	},
 	OnKey: (isUp, Key, Other) => {
 		if (Game.AutoMode) return;
-		var now = Game.Audio.currentTime * 1000;
+		var now = Game.Audio.currentTime * 1000 - Game.Offset;
 		if (!Game.MakingMode && Game.Audio.paused) return;
 		var Found = Game._.Keys.some((key, i) => {
 			if (key == Key) {
@@ -882,9 +894,11 @@ var Game = {
 					case 78: //N: Pause
 						if (isUp) return;
 						Game.Audio.pause();
+						break;
 					case 77: //M: Restart
 						if (isUp) return;
 						Game.Audio.play();
+						break;
 					case 13: //Enter: Finish
 						Game.FinishTime = Game.Audio.currentTime * 1000;
 						(function () {
@@ -974,7 +988,11 @@ var Game = {
 							Game.Lines[i].Nodes = [];
 						return;
 				}
-			}
+			} 
+			switch (e.keyCode) {
+				case 27: if (Game.Tickings > 0) OnClick_Game_prev({preventDefault:()=>0});
+				default: console.log(e.keyCode);
+			}	
 			if (Game_Keyboard_[e.keyCode]) return;
 			Game_Keyboard_[e.keyCode] = true;
 			Game.OnKey(false, e.keyCode, {
@@ -1266,6 +1284,7 @@ window.addEventListener("load", () => {
 	Game.Set_Effect(!("noeffect" in A));
 	Game.Set_Accelerate(!("accelerate" in A));
 	if ("speed" in A) Game.Speed = A.speed;
+	if ("offset" in A) Game.Offset = A.offset;
 	Game.FitToKey = "fit" in A;
 	Game.OnLoad();
 	Onload();
