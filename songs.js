@@ -88,17 +88,10 @@
 		Level: 13,
 		File: "Smoke-15",
 		Music: "Smoke.mp3"
-	},/*ここまで*/
-	{
-		Title: "秋鮭",
-		Level: 6,
-		File: "Syake-6",
-		Music: "秋鮭.m4a"
-	},
-	{
-		Title: "秋鮭",
-		Level: 12,
-		File: "Syake-10",
-		Music: "秋鮭.m4a"
+	},{
+		Title: "StarDrive",
+		Level: 9,
+		File: "StarDrive-9",
+		Music: "StarDeive.m4a"
 	}
 ];
