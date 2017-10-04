@@ -148,15 +148,15 @@
 		#name,
 		#songlist>*,
 		#tags>*,
-		#inputs>* {
+		.inputs>* {
 			font-size: 1.5em;
 		}
 
-		#inputs>*:not(:first-child) {
+		.inputs>*:not(:first-child) {
 			margin-left: 1em;
 		}
 
-		#inputs {
+		.inputs {
 			margin-bottom: 1em;
 		}
 
@@ -273,6 +273,7 @@
 
 		#song,
 		#speed,
+		#offset,
 		#min,
 		#name,
 		#songlist>*,
@@ -379,16 +380,23 @@
 				<canvas id="c1"></canvas>
 			</div>
 			<div class="cV fading2" id="menu">
-				<div class="cH scrollX" id="inputs">
+				<div class="cH scrollX inputs">
 					<div class="grow" id="song" song="_">Song...</div>
 					<div class="unselbtn" id="effect">Effect-X</div>
 					<div class="unselbtn" id="se">SE-X</div>
 					<div class="unselbtn" id="line">Line-X</div>
+					<div class="unselbtn" id="accelerate">Accelerate-X</div>
+				</div>
+				<div class="cH scrollX inputs">
+					<div class="grow"></div>
 					<div id="min">
 						∞min
 					</div>
 					<div id="speed" speed="1">
 						Speedx1.0
+					</div>
+					<div id="offset" offset="0">
+						Offset:0
 					</div>
 				</div>
 				<div class="grow" id="menubody">
@@ -417,6 +425,10 @@
 							<p style="margin-top: 1em">
 								更新
 								<ul style="margin-left: 1em;">
+									<li style="display: block">2017/09/15 「秋鮭」の追加・レベルの調節を行いました。</li>
+									<li style="display: block">2017/09/15 Escapeキーにより、ゲームを終了できるようになります</li>
+									<li style="display: block">2017/09/15 [Accelerate-O]のクリックにより、ノーツが加速しなくなります。お好みに合わせてお使いください</li>
+									<li style="display: block">2017/08/19 【東方花映塚】フラワリングナイト を追加</li>
 									<li style="display: block">2017/07/28 過剰なラインの装飾を[Effect-O]のクリックにより取り除けるようにした</li>
 									<li style="display: block">2017/07/27 曲の追加,空打ちへの対応,過剰なラインの装飾</li>
 								</ul>
