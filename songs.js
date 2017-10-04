@@ -90,13 +90,13 @@
 		Music: "Smoke.mp3"
 	},/*ここまで*/
 	{
-		Title: "秋鮭",
+		Title: "秋鮭/Loading...",
 		Level: 6,
 		File: "Syake-6",
 		Music: "秋鮭.m4a"
 	},
 	{
-		Title: "秋鮭",
+		Title: "秋鮭/Loading...",
 		Level: 12,
 		File: "Syake-10",
 		Music: "秋鮭.m4a"
