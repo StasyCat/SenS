@@ -91,7 +91,17 @@
 	},{
 		Title: "StarDrive",
 		Level: 9,
-		File: "Stardrive-9",
-		Music: "StarDrive.m4a"
+		File: "StarDrive-9",
+		Music: "StarDeive.m4a"
+	},{
+		Title: "秋鮭/Loading...",
+		Level: 6,
+		File: "Syake-6",
+		Music: "秋鮭.m4a"
+	},{
+		Title: "秋鮭/Loading...",
+		Level: 10,
+		File: "Syake-10",
+		Music: "秋鮭.m4a"
 	}
 ];
