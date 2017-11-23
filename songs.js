@@ -105,7 +105,7 @@
 		Music: "秋鮭.m4a"
 	},{
 		Title: "While the star falling",
-		Level: 12,
+		Level: 14,
 		File: "fall-star",
 		Music: "while the falling star saw.m4a"
 	}
