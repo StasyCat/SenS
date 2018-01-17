@@ -88,11 +88,12 @@
 		Level: 13,
 		File: "Smoke-15",
 		Music: "Smoke.mp3"
-	},{
+	},
+	{
 		Title: "StarDrive",
-		Level: 9,
-		File: "StarDrive-9",
-		Music: "StarDeive.m4a"
+		Level: 8,
+		File: "Stardrive-9",
+		Music: "StarDrive.m4a"
 	},{
 		Title: "秋鮭/Loading...",
 		Level: 6,
@@ -108,5 +109,11 @@
 		Level: 14,
 		File: "fall-star",
 		Music: "while the falling star saw.m4a"
+	},
+	{
+		Title: "Scintilla cielo",
+		Level: 12,
+		File: "cielo-12",
+		Music: "cielo.mp3"
 	}
 ];
