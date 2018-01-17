@@ -88,11 +88,12 @@
 		Level: 13,
 		File: "Smoke-15",
 		Music: "Smoke.mp3"
-	},{
+	},
+	{
 		Title: "StarDrive",
 		Level: 8,
 		File: "Stardrive-9",
-		Music: "StarDeive.m4a"
+		Music: "StarDrive.m4a"
 	},{
 		Title: "秋鮭/Loading...",
 		Level: 6,

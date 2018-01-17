@@ -1,4 +1,5 @@
 "use strict";
+while(prompt("Pass: ","Documentation of SenS")!="Invitation of SenS")0;
 console.info(`Keys
 SDF_JKL: あれ
 ** Making Only **
